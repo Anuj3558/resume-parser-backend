@@ -7,8 +7,6 @@
     "dev": "node build/server/index.js",
     "build": "npx tsc",
     "build:app": "xcopy server\\views build\\server\\views /E /I /Y",
-    "postbuild": "xcopy server\\views build\\server\\views /E /I /Y && xcopy .env build\\.env /E /I /Y ",
-    "build:app": "xcopy server\\views build\\server\\views /E /I /Y",
     "postbuild": "xcopy server\\views build\\server\\views /E /I /Y",
     "watch": "npx tsc --watch",
     "start": "npx tsc && node build/index.js"
@@ -25,7 +23,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
-    "cors": "^2.8.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -34,6 +31,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
     "pdf-parse": "^1.1.1",
-    "pdf2json": "^3.1.4"
+    "pdf2json": "^3.1.4",
+    "xlsx": "^0.18.5"
   }
 }

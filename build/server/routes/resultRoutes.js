@@ -16,11 +16,12 @@ const express_1 = require("express");
 const index_1 = require("../../index");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const anthropic_1 = require("../../anthropic");
+const pdf_extract_1 = require("../../pdf-extract");
 const router = (0, express_1.Router)();
 router.get('/process-resumes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const inputDir = path_1.default.join(__dirname, '..', '..', 'input');
-        console.log(inputDir);
         const outputDir = path_1.default.join(__dirname, '..', '..', 'output');
         // Ensure directories exist
         if (!fs_1.default.existsSync(inputDir)) {
@@ -58,6 +59,37 @@ router.get('/process-resumes', (req, res) => __awaiter(void 0, void 0, void 0, f
     catch (error) {
         console.error('Error processing resumes:', error);
         res.status(500).json({ error: 'Error processing resumes' });
+    }
+}));
+router.get("/process-resume/:jobPosition", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { jobPosition } = req.params; // Get job position from URL
+        const inputDir = path_1.default.join(__dirname, "..", "..", "input");
+        if (!fs_1.default.existsSync(inputDir)) {
+            return res.status(400).json({ error: "Input directory does not exist" });
+        }
+        const resumeFiles = fs_1.default.readdirSync(inputDir).filter((file) => file.endsWith(".pdf"));
+        if (resumeFiles.length === 0) {
+            return res.status(400).json({ error: "No resumes found in input directory" });
+        }
+        const results = [];
+        for (const file of resumeFiles) {
+            const filePath = path_1.default.join(inputDir, file);
+            const resumeText = yield (0, pdf_extract_1.extractTextFromPdf)(filePath);
+            try {
+                const evaluation = yield (0, anthropic_1.invokeAnthropicForJob)(resumeText, jobPosition);
+                results.push({ name: file, response: evaluation.response });
+            }
+            catch (error) {
+                console.error(`Error processing ${file}:`, error);
+                results.push({ name: file, error: "Anthropic API Error" });
+            }
+        }
+        res.json({ results });
+    }
+    catch (error) {
+        console.error("Error processing resumes:", error);
+        res.status(500).json({ error: "Error processing resumes" });
     }
 }));
 exports.default = router;

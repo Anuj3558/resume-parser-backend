@@ -1,6 +1,13 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { Usage } from '@anthropic-ai/sdk/resources/messages';
-
+import xlsx from "xlsx";
+export type JobEvaluation = {
+  response: any; // Dynamic response based on the job prompt
+  tokens: {
+    input_tokens: number;
+    output_tokens: number;
+  };
+};
 export type ResumeEvaluation = {
   response: {
     name: string;
@@ -80,3 +87,37 @@ export async function invokeAnthropic(pdfExtract: string): Promise<ResumeEvaluat
   return { response: JSON.parse(response), tokens: completion.usage };
 }
 
+function getPromptFromExcel(jobPosition: string): string | null {
+  const workbook = xlsx.readFile("./Prompts.xlsx");
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const data = xlsx.utils.sheet_to_json<{ "Job Position": string; Prompt: string }>(sheet);
+
+  const entry = data.find((row) => row["Job Position"].toLowerCase() === jobPosition.toLowerCase());
+  return entry ? entry.Prompt : null;
+}
+
+export async function invokeAnthropicForJob(pdfExtract: string, jobPosition: string): Promise<JobEvaluation> {
+  const anthropic = new Anthropic({
+    apiKey:process.env.ANTHROPIC_API_KEY,
+  });
+
+  const prompt = getPromptFromExcel(jobPosition);
+  if (!prompt) {
+    throw new Error(`No prompt found for job position: ${jobPosition}`);
+  }
+ 
+  const formattedPrompt = prompt+pdfExtract;
+   
+  const completion = await anthropic.messages.create({
+    model: "claude-3-5-sonnet-20240620",
+    max_tokens: 4096,
+    messages: [{ role: "user", content: formattedPrompt }],
+    temperature: 0.0,
+  });
+
+  const response =
+    completion.content[0].type === "text" ? completion.content[0].text : "";
+    
+
+  return { response: JSON.parse(response), tokens: completion.usage };
+}

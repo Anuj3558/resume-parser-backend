@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.invokeAnthropic = invokeAnthropic;
+exports.invokeAnthropicForJob = invokeAnthropicForJob;
 const sdk_1 = require("@anthropic-ai/sdk");
+const xlsx_1 = __importDefault(require("xlsx"));
 const PROMPT = `
   I want to shortlist candidates for internship. I am looking for motivated candidates that are: 
    - studying in engineering, preferably CSE. 
@@ -54,6 +59,33 @@ function invokeAnthropic(pdfExtract) {
         const response = completion.content[0].type === 'text'
             ? completion.content[0].text
             : '';
+        return { response: JSON.parse(response), tokens: completion.usage };
+    });
+}
+function getPromptFromExcel(jobPosition) {
+    const workbook = xlsx_1.default.readFile("./Prompts.xlsx");
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = xlsx_1.default.utils.sheet_to_json(sheet);
+    const entry = data.find((row) => row["Job Position"].toLowerCase() === jobPosition.toLowerCase());
+    return entry ? entry.Prompt : null;
+}
+function invokeAnthropicForJob(pdfExtract, jobPosition) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const anthropic = new sdk_1.Anthropic({
+            apiKey: process.env.ANTHROPIC_API_KEY,
+        });
+        const prompt = getPromptFromExcel(jobPosition);
+        if (!prompt) {
+            throw new Error(`No prompt found for job position: ${jobPosition}`);
+        }
+        const formattedPrompt = prompt + pdfExtract;
+        const completion = yield anthropic.messages.create({
+            model: "claude-3-5-sonnet-20240620",
+            max_tokens: 4096,
+            messages: [{ role: "user", content: formattedPrompt }],
+            temperature: 0.0,
+        });
+        const response = completion.content[0].type === "text" ? completion.content[0].text : "";
         return { response: JSON.parse(response), tokens: completion.usage };
     });
 }
