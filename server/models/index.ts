@@ -1,9 +1,11 @@
 import mongoose, {Schema} from "mongoose"
 
 const JobCategorySchema = new mongoose.Schema({
-	id: {type: mongoose.Schema.Types.ObjectId, auto: true}, // Auto-generated unique ID
-	title: {type: String, required: true, unique: true}, // Job category title
-})
+  id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
+  name: { type: String, required: true, unique: true },
+  createdAt: { type: Date, default: Date.now }
+
+});
 
 const JobSchema = new Schema({
 	userId: {type: Schema.Types.ObjectId, ref: "User", required: true},

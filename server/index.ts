@@ -10,6 +10,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import authRoutes from "./auth/authRoutes"
+import jobRouter from "./routes/jobRoutes"
 
 const app = express()
 const PORT = 4000
@@ -40,6 +41,7 @@ app.use("/auth", authRoutes)
 // Protected routes
 app.use("/files", fileRoutes)
 app.use("/results", resultRoutes)
+app.use("/api/job", jobRouter)
 app.use("/user", userRoutes)
 
 app.get("/", (req: Request, res: Response) => {
