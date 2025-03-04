@@ -2,7 +2,8 @@ import mongoose, { Schema } from "mongoose";
 
 const JobCategorySchema = new mongoose.Schema({
   id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
-  title: { type: String, required: true, unique: true }, // Job category title
+  name: { type: String, required: true, unique: true },
+  createdAt: { type: Date, default: Date.now }
 
 });
 

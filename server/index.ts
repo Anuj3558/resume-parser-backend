@@ -7,6 +7,8 @@ import resultRoutes from './routes/resultRoutes';
 import fs from "fs"
 
 import authRoutes from "./auth/authRoutes"
+import jobRouter from './routes/jobRoutes';
+import connectDB from './models/db';
 
 
 const app = express();
@@ -16,7 +18,7 @@ export const inputDir = path.join(__dirname, 'input');
 export const outputDir = path.join(__dirname, 'output');
 
   // Absolute path to output folder
-
+connectDB()
 
 // Middleware
 app.use(express.static('views'));
@@ -39,6 +41,7 @@ app.use('/auth', authRoutes);
 // Protected routes
 app.use('/files', fileRoutes);
 app.use('/results', resultRoutes);
+app.use('/api/job', jobRouter)
 
 app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, 'views', 'index.html'));

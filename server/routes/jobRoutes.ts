@@ -1,50 +1,67 @@
 import express, { Request, Response } from "express";
 
 import { Job, JobCategory } from "../models";
-const router = express.Router();
+const jobRouter = express.Router();
 
 /** -----------------------
  * Job Category Endpoints
  * ------------------------
  */
+jobRouter.get("/job-categories", async (req: Request, res: Response) => {
+    try {
+        const categories = await JobCategory.find();
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching job categories" });
+    }
+});
 
-// Create Job Category
-router.post("/job-categories", async (req: any, res:any) => {
+
+
+// ✅ Create Job Category (Uses `name` Instead of `title`)
+jobRouter.post("/job-categories", async (req:any, res:any) => {
   try {
-    const { title } = req.body;
-    if (!title) return res.status(400).json({ error: "Title is required" });
-
-    const jobCategory = new JobCategory({ title });
+    const { name } = req.body; 
+    if (!name) return res.status(400).json({ error: "Name is required" });
+    
+    const jobCategory = new JobCategory({ name });
     await jobCategory.save();
-
-    res.status(201).json(jobCategory);
+    console.log(jobCategory)
+    res.status(201).json({
+      id: jobCategory._id,
+      name: jobCategory.name,
+      createdAt: jobCategory.createdAt,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error creating job category" });
   }
 });
 
-// Update Job Category
-router.put("/job-categories/:id", async (req: any, res:any) => {
+
+jobRouter.put("/job-categories/:id", async (req:any, res:any) => {
   try {
-    const { title } = req.body;
+    const { name } = req.body; 
     const { id } = req.params;
 
     const jobCategory = await JobCategory.findByIdAndUpdate(
       id,
-      { title },
+      { name },
       { new: true, runValidators: true }
     );
+    if  (!jobCategory) return res.status(404).json({ error: "Job Category not found" });
 
-    if (!jobCategory) return res.status(404).json({ error: "Job Category not found" });
-
-    res.json(jobCategory);
+    res.json({
+      id: jobCategory._id,
+      name: jobCategory.name,
+      createdAt: jobCategory.createdAt,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error updating job category" });
   }
 });
 
-// Delete Job Category
-router.delete("/job-categories/:id", async (req: any, res:any) => {
+// ✅ Delete Job Category
+jobRouter.delete("/job-categories/:id", async (req:any, res:any) => {
   try {
     const { id } = req.params;
     const jobCategory = await JobCategory.findByIdAndDelete(id);
@@ -57,13 +74,37 @@ router.delete("/job-categories/:id", async (req: any, res:any) => {
   }
 });
 
+// ✅ Get All Job Categories (Ensure `id`, `name`, `createdAt`)
+jobRouter.get("/job-categories", async (req:any, res:any) => {
+  try {
+    const jobCategories = await JobCategory.find().sort({ createdAt: -1 });
+
+    res.json(jobCategories.map(cat => ({
+      id: cat._id,
+      name: cat.name,
+      createdAt: cat.createdAt,
+    })));
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching job categories" });
+  }
+});
+
+
 /** -----------------------
  * Job Endpoints
  * ------------------------
  */
-
+ 
+jobRouter.get("/jobs", async (req: Request, res: Response) => {
+    try {
+      const jobs = await Job.find().populate("userId", "name email");
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching jobs" });
+    }
+});
 // Create Job
-router.post("/jobs", async (req: any, res:any) => {
+jobRouter.post("/jobs", async (req: any, res:any) => {
   try {
     const { userId, title, description, skillReq, status } = req.body;
 
@@ -80,7 +121,7 @@ router.post("/jobs", async (req: any, res:any) => {
 });
 
 // Update Job
-router.put("/jobs/:id", async (req: any, res:any) => {
+jobRouter.put("/jobs/:id", async (req: any, res:any) => {
   try {
     const { id } = req.params;
     const { title, description, skillReq, status } = req.body;
@@ -100,7 +141,7 @@ router.put("/jobs/:id", async (req: any, res:any) => {
 });
 
 // Delete Job
-router.delete("/jobs/:id", async (req: any, res:any) => {
+jobRouter.delete("/jobs/:id", async (req: any, res:any) => {
   try {
     const { id } = req.params;
     const job = await Job.findByIdAndDelete(id);
@@ -113,4 +154,4 @@ router.delete("/jobs/:id", async (req: any, res:any) => {
   }
 });
 
-export default router;
+export default jobRouter;

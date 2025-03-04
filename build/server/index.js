@@ -12,11 +12,14 @@ const fileRoutes_1 = __importDefault(require("./routes/fileRoutes"));
 const resultRoutes_1 = __importDefault(require("./routes/resultRoutes"));
 const fs_1 = __importDefault(require("fs"));
 const authRoutes_1 = __importDefault(require("./auth/authRoutes"));
+const jobRoutes_1 = __importDefault(require("./routes/jobRoutes"));
+const db_1 = __importDefault(require("./models/db"));
 const app = (0, express_1.default)();
 const PORT = 4000;
 exports.inputDir = path_1.default.join(__dirname, 'input');
 exports.outputDir = path_1.default.join(__dirname, 'output');
 // Absolute path to output folder
+(0, db_1.default)();
 // Middleware
 app.use(express_1.default.static('views'));
 app.use('/input', express_1.default.static(exports.inputDir));
@@ -35,6 +38,7 @@ app.use('/auth', authRoutes_1.default);
 // Protected routes
 app.use('/files', fileRoutes_1.default);
 app.use('/results', resultRoutes_1.default);
+app.use('/api/job', jobRoutes_1.default);
 app.get('/', (req, res) => {
     res.sendFile(path_1.default.join(__dirname, 'views', 'index.html'));
 });
