@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors())
 app.use(
   cors({
-    origin: "https://resume-parser-lovat-two.vercel.app",
+    origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
     methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
