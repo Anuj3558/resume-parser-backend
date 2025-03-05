@@ -33,6 +33,8 @@ router.post("/addUser", async (req: any, res: any) => {
 	} catch (error) {}
 })
 
+
+
 // Update Job Category
 router.put("/updateUser/:id", async (req: any, res: any) => {
 	try {

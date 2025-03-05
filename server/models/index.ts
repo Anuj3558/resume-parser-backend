@@ -16,8 +16,8 @@ const JobSchema = new Schema({
 	createdAt: { type: Date, default: Date.now }, 
 	resumeMatches: { type: Number, default: 0 }, 
 	status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
-	// userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-	users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
+	assigned: [{ type: Schema.Types.ObjectId, ref: "User"}],
+	// users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
 	resumes: [{ type: Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
   });
   
@@ -26,7 +26,7 @@ const JobSchema = new Schema({
 	name: { type: String, required: true },
 	username: { type: String, required: true, unique: true }, // New username field
 	email: { type: String, required: true, unique: true },
-	password: { type: String, required: true }, // Ensure password is required
+	// password: { type: String, required: true }, // Ensure password is required
 	category: { type: String, enum: ["ADMIN", "USER"] },
 	timestamp: { type: Date, default: Date.now },
 	resumes: [{ type: Schema.Types.ObjectId, ref: "Resume" }],
@@ -35,7 +35,7 @@ const JobSchema = new Schema({
 	status: { type: String, enum: ["ACTIVE", "INACTIVE"], required: true },
   });
   
-  const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 const JobCategory = mongoose.model("JobCategory", JobCategorySchema)
 const Job = mongoose.model("JobSchema", JobSchema)
 

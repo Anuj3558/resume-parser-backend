@@ -49,20 +49,21 @@ const JobSchema = new mongoose_1.Schema({
     createdAt: { type: Date, default: Date.now },
     resumeMatches: { type: Number, default: 0 },
     status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
-    // userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    users: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Assignment" }],
+    assigned: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }],
+    // users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
     resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
 });
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
+    username: { type: String, required: true, unique: true }, // New username field
     email: { type: String, required: true, unique: true },
-    password: { type: String },
-    category: { type: String, Enum: ["ADMIN", "USER"] },
+    // password: { type: String, required: true }, // Ensure password is required
+    category: { type: String, enum: ["ADMIN", "USER"] },
     timestamp: { type: Date, default: Date.now },
     resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Resume" }],
     jobs: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Assignment" }],
     role: { type: String, required: true },
-    status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
+    status: { type: String, enum: ["ACTIVE", "INACTIVE"], required: true },
 });
 const User = mongoose_1.default.model("User", userSchema);
 exports.User = User;
