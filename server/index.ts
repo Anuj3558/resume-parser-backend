@@ -11,6 +11,7 @@ dotenv.config()
 
 import authRoutes from "./auth/authRoutes"
 import jobRouter from "./routes/jobRoutes"
+import { connectToDatabase } from "./utils/db"
 
 const app = express()
 const PORT = 4000
@@ -18,14 +19,14 @@ const PORT = 4000
 export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
-// Absolute path to output folder
-
+connectToDatabase()
 // Middleware
 app.use(express.static("views"))
 app.use("/input", express.static(inputDir))
 app.use("/output", express.static(outputDir))
 app.use(fileUpload())
 app.use(express.json())
+
 app.use(express.urlencoded({extended: true}))
 app.use(cors())
 app.use(
@@ -41,7 +42,7 @@ app.use("/auth", authRoutes)
 // Protected routes
 app.use("/files", fileRoutes)
 app.use("/results", resultRoutes)
-app.use("/api/job", jobRouter)
+app.use("/job", jobRouter)
 app.use("/user", userRoutes)
 
 app.get("/", (req: Request, res: Response) => {

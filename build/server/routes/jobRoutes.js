@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const models_1 = require("../models");
+const mongoose_1 = require("mongoose");
 const jobRouter = express_1.default.Router();
 /** -----------------------
  * Job Category Endpoints
@@ -21,6 +22,7 @@ const jobRouter = express_1.default.Router();
  */
 jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('Hello');
         const categories = yield models_1.JobCategory.find();
         res.json(categories);
     }
@@ -28,7 +30,7 @@ jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).json({ error: "Error fetching job categories" });
     }
 }));
-// ✅ Create Job Category (Uses `name` Instead of `title`)
+// 
 jobRouter.post("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name } = req.body;
@@ -64,7 +66,7 @@ jobRouter.put("/job-categories/:id", (req, res) => __awaiter(void 0, void 0, voi
         res.status(500).json({ error: "Error updating job category" });
     }
 }));
-// ✅ Delete Job Category
+// 
 jobRouter.delete("/job-categories/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
@@ -77,7 +79,7 @@ jobRouter.delete("/job-categories/:id", (req, res) => __awaiter(void 0, void 0, 
         res.status(500).json({ error: "Error deleting job category" });
     }
 }));
-// ✅ Get All Job Categories (Ensure `id`, `name`, `createdAt`)
+// 
 jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const jobCategories = yield models_1.JobCategory.find().sort({ createdAt: -1 });
@@ -95,22 +97,24 @@ jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0,
  * Job Endpoints
  * ------------------------
  */
+// 
 jobRouter.get("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const jobs = yield models_1.Job.find().populate("userId", "name email");
+        // const jobs = await Job.find().populate("userId", "name email");
+        const jobs = yield models_1.Job.find();
         res.json(jobs);
     }
     catch (error) {
         res.status(500).json({ error: "Error fetching jobs" });
     }
 }));
-// Create Job
+// 
 jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { userId, title, description, skillReq, status } = req.body;
-        if (!userId || !title || !description || !skillReq || !status)
+        const { userId, title, category, description, requirements, location } = req.body;
+        if (!title || !category || !description || !requirements || !location)
             return res.status(400).json({ error: "All fields are required" });
-        const job = new models_1.Job({ userId, title, description, skillReq, status });
+        const job = new models_1.Job({ title, category, description, requirements, location });
         yield job.save();
         res.status(201).json(job);
     }
@@ -118,12 +122,14 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(500).json({ error: "Error creating job" });
     }
 }));
-// Update Job
+// 
 jobRouter.put("/jobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { title, description, skillReq, status } = req.body;
-        const job = yield models_1.Job.findByIdAndUpdate(id, { title, description, skillReq, status }, { new: true, runValidators: true });
+        if (!mongoose_1.Types.ObjectId.isValid(id))
+            return res.status(400).json({ error: "Invalid Job ID" });
+        const { title, category, description, requirements, location, status, resumeMatches } = req.body;
+        const job = yield models_1.Job.findByIdAndUpdate(id, { title, category, description, requirements, location, status, resumeMatches }, { new: true, runValidators: true });
         if (!job)
             return res.status(404).json({ error: "Job not found" });
         res.json(job);
@@ -132,10 +138,12 @@ jobRouter.put("/jobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json({ error: "Error updating job" });
     }
 }));
-// Delete Job
+// 
 jobRouter.delete("/jobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
+        if (!mongoose_1.Types.ObjectId.isValid(id))
+            return res.status(400).json({ error: "Invalid Job ID" });
         const job = yield models_1.Job.findByIdAndDelete(id);
         if (!job)
             return res.status(404).json({ error: "Job not found" });

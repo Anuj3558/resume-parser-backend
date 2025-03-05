@@ -1,14 +1,16 @@
 import express, { Request, Response } from "express";
 
 import { Job, JobCategory } from "../models";
+import { Types } from "mongoose";
 const jobRouter = express.Router();
 
 /** -----------------------
  * Job Category Endpoints
  * ------------------------
  */
-jobRouter.get("/job-categories", async (req: Request, res: Response) => {
+jobRouter.get("/job-categories", async (req: any, res: any) => {
     try {
+        console.log('Hello')
         const categories = await JobCategory.find();
         res.json(categories);
     } catch (error) {
@@ -18,7 +20,7 @@ jobRouter.get("/job-categories", async (req: Request, res: Response) => {
 
 
 
-// ✅ Create Job Category (Uses `name` Instead of `title`)
+// 
 jobRouter.post("/job-categories", async (req:any, res:any) => {
   try {
     const { name } = req.body; 
@@ -60,7 +62,7 @@ jobRouter.put("/job-categories/:id", async (req:any, res:any) => {
   }
 });
 
-// ✅ Delete Job Category
+// 
 jobRouter.delete("/job-categories/:id", async (req:any, res:any) => {
   try {
     const { id } = req.params;
@@ -74,7 +76,7 @@ jobRouter.delete("/job-categories/:id", async (req:any, res:any) => {
   }
 });
 
-// ✅ Get All Job Categories (Ensure `id`, `name`, `createdAt`)
+// 
 jobRouter.get("/job-categories", async (req:any, res:any) => {
   try {
     const jobCategories = await JobCategory.find().sort({ createdAt: -1 });
@@ -95,23 +97,26 @@ jobRouter.get("/job-categories", async (req:any, res:any) => {
  * ------------------------
  */
  
-jobRouter.get("/jobs", async (req: Request, res: Response) => {
-    try {
-      const jobs = await Job.find().populate("userId", "name email");
-      res.json(jobs);
-    } catch (error) {
-      res.status(500).json({ error: "Error fetching jobs" });
-    }
-});
-// Create Job
-jobRouter.post("/jobs", async (req: any, res:any) => {
+// 
+jobRouter.get("/jobs", async (req: any, res: any) => {
   try {
-    const { userId, title, description, skillReq, status } = req.body;
+    // const jobs = await Job.find().populate("userId", "name email");
+    const jobs = await Job.find()
+    res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching jobs" });
+  }
+});
 
-    if (!userId || !title || !description || !skillReq || !status)
+// 
+jobRouter.post("/jobs", async (req: any, res: any) => {
+  try {
+    const { userId, title, category, description, requirements, location} = req.body;
+
+    if ( !title || !category || !description || !requirements || !location )
       return res.status(400).json({ error: "All fields are required" });
 
-    const job = new Job({ userId, title, description, skillReq, status });
+    const job = new Job({  title, category, description, requirements, location});
     await job.save();
 
     res.status(201).json(job);
@@ -120,15 +125,17 @@ jobRouter.post("/jobs", async (req: any, res:any) => {
   }
 });
 
-// Update Job
-jobRouter.put("/jobs/:id", async (req: any, res:any) => {
+// 
+jobRouter.put("/jobs/:id", async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const { title, description, skillReq, status } = req.body;
+    if (!Types.ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid Job ID" });
+
+    const { title, category, description, requirements, location, status, resumeMatches } = req.body;
 
     const job = await Job.findByIdAndUpdate(
       id,
-      { title, description, skillReq, status },
+      { title, category, description, requirements, location, status, resumeMatches },
       { new: true, runValidators: true }
     );
 
@@ -140,10 +147,12 @@ jobRouter.put("/jobs/:id", async (req: any, res:any) => {
   }
 });
 
-// Delete Job
-jobRouter.delete("/jobs/:id", async (req: any, res:any) => {
+// 
+jobRouter.delete("/jobs/:id", async (req: any, res: any) => {
   try {
     const { id } = req.params;
+    if (!Types.ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid Job ID" });
+
     const job = await Job.findByIdAndDelete(id);
 
     if (!job) return res.status(404).json({ error: "Job not found" });

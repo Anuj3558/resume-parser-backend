@@ -10,20 +10,22 @@ const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("cors"));
 const fileRoutes_1 = __importDefault(require("./routes/fileRoutes"));
 const resultRoutes_1 = __importDefault(require("./routes/resultRoutes"));
+const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const fs_1 = __importDefault(require("fs"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const authRoutes_1 = __importDefault(require("./auth/authRoutes"));
 const jobRoutes_1 = __importDefault(require("./routes/jobRoutes"));
-const db_1 = __importDefault(require("./models/db"));
+const db_1 = require("./utils/db");
 const app = (0, express_1.default)();
 const PORT = 4000;
-exports.inputDir = path_1.default.join(__dirname, 'input');
-exports.outputDir = path_1.default.join(__dirname, 'output');
-// Absolute path to output folder
-(0, db_1.default)();
+exports.inputDir = path_1.default.join(__dirname, "input");
+exports.outputDir = path_1.default.join(__dirname, "output");
+(0, db_1.connectToDatabase)();
 // Middleware
-app.use(express_1.default.static('views'));
-app.use('/input', express_1.default.static(exports.inputDir));
-app.use('/output', express_1.default.static(exports.outputDir));
+app.use(express_1.default.static("views"));
+app.use("/input", express_1.default.static(exports.inputDir));
+app.use("/output", express_1.default.static(exports.outputDir));
 app.use((0, express_fileupload_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
@@ -31,25 +33,26 @@ app.use((0, cors_1.default)());
 app.use((0, cors_1.default)({
     origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
     methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 // Routes
-app.use('/auth', authRoutes_1.default);
+app.use("/auth", authRoutes_1.default);
 // Protected routes
-app.use('/files', fileRoutes_1.default);
-app.use('/results', resultRoutes_1.default);
-app.use('/api/job', jobRoutes_1.default);
-app.get('/', (req, res) => {
-    res.sendFile(path_1.default.join(__dirname, 'views', 'index.html'));
+app.use("/files", fileRoutes_1.default);
+app.use("/results", resultRoutes_1.default);
+app.use("/job", jobRoutes_1.default);
+app.use("/user", userRoutes_1.default);
+app.get("/", (req, res) => {
+    //res.sendFile(path.join(__dirname, "views", "index.html"))
 });
-app.post('/config/update', (req, res) => {
+app.post("/config/update", (req, res) => {
     const { inputDir, outputDir } = req.body;
     // Validate inputs (optional)
     if (!inputDir && !outputDir) {
         return res.status(400).send("No directories provided.");
     }
-    const envFilePath = path_1.default.join(__dirname, '../.env');
-    let envConfig = fs_1.default.readFileSync(envFilePath, 'utf-8');
+    const envFilePath = path_1.default.join(__dirname, "../.env");
+    let envConfig = fs_1.default.readFileSync(envFilePath, "utf-8");
     if (inputDir) {
         envConfig = envConfig.replace(/INPUT_DIR=.*/, `INPUT_DIR=${inputDir}`);
     }

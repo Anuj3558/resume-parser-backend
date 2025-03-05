@@ -8,15 +8,19 @@ const JobCategorySchema = new mongoose.Schema({
 });
 
 const JobSchema = new Schema({
-	userId: {type: Schema.Types.ObjectId, ref: "User", required: true},
-	title: {type: String, required: true},
-	description: {type: String, required: true},
-	skillReq: {type: String, required: true},
-	timestamp: {type: Date, default: Date.now},
-	status: {type: String, enum: ["OPEN", "CLOSED"], required: true},
-	users: [{type: Schema.Types.ObjectId, ref: "Assignment"}],
-	resumes: [{type: Schema.Types.ObjectId, ref: "ResumeAnalysed"}],
-})
+	title: { type: String, required: true },
+	category: { type: String, required: true },
+	description: { type: String, required: true },
+	requirements: { type: String, required: true }, 
+	location: { type: String, required: true },
+	createdAt: { type: Date, default: Date.now }, 
+	resumeMatches: { type: Number, default: 0 }, 
+	status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
+	// userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+	users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
+	resumes: [{ type: Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
+  });
+  
 
 const userSchema = new Schema({
 	name: {type: String, required: true},

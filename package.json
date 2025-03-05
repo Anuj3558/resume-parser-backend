@@ -4,8 +4,8 @@
   "main": "build/index.js",
   "scripts": {
     "nodemon": "npx nodemon build/server/index.js",
-    "dev": "node build/server/index.js",
-    "build": "npx tsc",
+    "dev": "nodemon",
+    "build": "npx tsc --watch",
     "build:app": "xcopy server\\views build\\server\\views /E /I /Y",
     "postbuild": "xcopy server\\views build\\server\\views /E /I /Y",
     "watch": "npx tsc --watch",
