@@ -1,33 +1,31 @@
 import mongoose, {Schema} from "mongoose"
 
 const JobCategorySchema = new mongoose.Schema({
-  id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
-  name: { type: String, required: true, unique: true },
-  createdAt: { type: Date, default: Date.now }
-
-});
+	id: {type: mongoose.Schema.Types.ObjectId, auto: true}, // Auto-generated unique ID
+	name: {type: String, required: true, unique: true},
+	createdAt: {type: Date, default: Date.now},
+})
 
 const JobSchema = new Schema({
-	title: { type: String, required: true },
-	category: { type: String, required: true },
-	description: { type: String, required: true },
-	requirements: { type: String, required: true }, 
-	location: { type: String, required: true },
-	createdAt: { type: Date, default: Date.now }, 
-	resumeMatches: { type: Number, default: 0 }, 
-	status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
+	title: {type: String, required: true},
+	category: {type: String, required: true},
+	description: {type: String, required: true},
+	requirements: {type: String, required: true},
+	location: {type: String, required: true},
+	createdAt: {type: Date, default: Date.now},
+	resumeMatches: {type: Number, default: 0},
+	status: {type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN"},
 	// userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-	users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
-	resumes: [{ type: Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
-  });
-  
+	users: [{type: Schema.Types.ObjectId, ref: "Assignment"}],
+	resumes: [{type: Schema.Types.ObjectId, ref: "ResumeAnalysed"}],
+})
 
 const userSchema = new Schema({
 	name: {type: String, required: true},
 
 	email: {type: String, required: true, unique: true},
 
-	password: {type: String},
+	password: {type: String, required: true},
 
 	category: {type: String, Enum: ["ADMIN", "USER"]},
 
@@ -37,7 +35,7 @@ const userSchema = new Schema({
 
 	jobs: [{type: Schema.Types.ObjectId, ref: "Assignment"}],
 
-	role: {type: String, required: true},
+	role: {type: String},
 
 	status: {type: String, Enum: ["ACTIVE", "INACTIVE"], required: true},
 })

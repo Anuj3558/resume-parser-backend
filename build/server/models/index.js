@@ -38,7 +38,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const JobCategorySchema = new mongoose_1.default.Schema({
     id: { type: mongoose_1.default.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
     name: { type: String, required: true, unique: true },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
 });
 const JobSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
@@ -56,12 +56,12 @@ const JobSchema = new mongoose_1.Schema({
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String },
+    password: { type: String, required: true },
     category: { type: String, Enum: ["ADMIN", "USER"] },
     timestamp: { type: Date, default: Date.now },
     resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Resume" }],
     jobs: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Assignment" }],
-    role: { type: String, required: true },
+    role: { type: String },
     status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
 });
 const User = mongoose_1.default.model("User", userSchema);
