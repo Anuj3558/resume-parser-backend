@@ -35,7 +35,7 @@ const JobSchema = new Schema({
 	status: { type: String, enum: ["ACTIVE", "INACTIVE"], required: true },
   });
   
-  const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 const JobCategory = mongoose.model("JobCategory", JobCategorySchema)
 const Job = mongoose.model("JobSchema", JobSchema)
 

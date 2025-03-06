@@ -19,7 +19,8 @@ const PORT = 4000
 export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
-connectToDatabase()
+connectToDatabase();
+
 // Middleware
 app.use(express.static("views"))
 app.use("/input", express.static(inputDir))
