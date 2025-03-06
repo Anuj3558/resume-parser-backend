@@ -77,7 +77,7 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             userId: user._id,
             username: user.username,
             email: user.email,
-            role: user.role,
+            role: user.category,
             status: user.status // Optional: Include role in the token
         }, JWT_SECRET, { expiresIn: "1h" });
         // Send response
@@ -87,11 +87,11 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 userId: user._id,
                 username: user.username,
                 email: user.email,
-                role: user.role,
+                role: user.category,
                 status: user.status // Optional: Include role in the response
             },
         });
-        console.log(res.json);
+        console.log(user.category);
     }
     catch (error) {
         console.error("Login error:", error);

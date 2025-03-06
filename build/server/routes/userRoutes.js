@@ -36,11 +36,12 @@ router.post("/addUser", (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const { name, email, status } = req.body;
         let { password } = req.body;
+        const category = "USER";
         if (!name || !email || !status || !password) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
         password = yield (0, bcryptjs_1.hash)(password, 10);
-        const user = new models_1.User({ name, email, status, password });
+        const user = new models_1.User({ name, email, status, password, category });
         yield user.save();
         res.status(201).json({ message: "Users added successfully" });
     }

@@ -73,7 +73,7 @@ router.post('/login', async (req:any, res:any) => {
         userId: user._id,
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: user.category,
         status:user.status // Optional: Include role in the token
       },
       JWT_SECRET,
@@ -87,11 +87,11 @@ router.post('/login', async (req:any, res:any) => {
         userId: user._id,
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: user.category,
         status:user.status // Optional: Include role in the response
       },
     });
-    console.log(res.json)
+    console.log(user.category)
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error" });

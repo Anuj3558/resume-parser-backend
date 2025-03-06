@@ -55,17 +55,12 @@ const JobSchema = new mongoose_1.Schema({
 });
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
-    username: { type: String, required: true, unique: true }, // New username field
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // Ensure password is required
-    category: { type: String, enum: ["ADMIN", "USER"] },
     password: { type: String, required: true },
     category: { type: String, Enum: ["ADMIN", "USER"] },
     timestamp: { type: Date, default: Date.now },
     resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Resume" }],
     jobs: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Assignment" }],
-    role: { type: String, required: true },
-    status: { type: String, enum: ["ACTIVE", "INACTIVE"], required: true },
     role: { type: String },
     status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
 });

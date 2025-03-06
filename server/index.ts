@@ -12,6 +12,7 @@ dotenv.config()
 import authRoutes from "./auth/authRoutes"
 import jobRouter from "./routes/jobRoutes"
 import { connectToDatabase } from "./utils/db"
+import Adminrouter from "./routes/AdminAnalyticsRoute"
 
 const app = express()
 const PORT = 4000
@@ -40,6 +41,7 @@ app.use(
 
 // Routes
 app.use("/auth", authRoutes)
+app.use("/api", Adminrouter)
 // Protected routes
 app.use("/files", fileRoutes)
 app.use("/results", resultRoutes)
