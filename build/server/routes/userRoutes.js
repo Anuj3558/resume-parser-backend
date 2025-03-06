@@ -16,11 +16,10 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const models_1 = require("../models");
-const db_1 = require("../utils/db");
+const bcryptjs_1 = require("bcryptjs");
 const router = express_1.default.Router();
 router.get("/getUsers", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, db_1.connectToDatabase)();
         const users = yield models_1.User.find();
         res.status(200).json(users);
     }
@@ -35,12 +34,13 @@ router.get("/getUsers", (req, res) => __awaiter(void 0, void 0, void 0, function
 }));
 router.post("/addUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, db_1.connectToDatabase)();
-        const { name, email, role, status } = req.body;
-        if (!name || !email || !role || !status) {
+        const { name, email, status } = req.body;
+        let { password } = req.body;
+        if (!name || !email || !status || !password) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
-        const user = new models_1.User({ name, email, role, status });
+        password = yield (0, bcryptjs_1.hash)(password, 10);
+        const user = new models_1.User({ name, email, status, password });
         yield user.save();
         res.status(201).json({ message: "Users added successfully" });
     }
@@ -49,16 +49,17 @@ router.post("/addUser", (req, res) => __awaiter(void 0, void 0, void 0, function
 // Update Job Category
 router.put("/updateUser/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, db_1.connectToDatabase)();
         const { id } = req.params;
-        const { name, email, role, status } = req.body;
-        if (!name || !email || !role || !status) {
+        const { name, email, status } = req.body;
+        let password = req.body.password;
+        password = yield (0, bcryptjs_1.hash)(password, 10);
+        if (!name || !email || !status || !password) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
         const updatedUser = yield models_1.User.findByIdAndUpdate(id, {
             name,
             email,
-            role,
+            password,
             status,
         }).exec();
         if (!updatedUser) {
@@ -73,7 +74,6 @@ router.put("/updateUser/:id", (req, res) => __awaiter(void 0, void 0, void 0, fu
 }));
 router.put("/updateUserStatus/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, db_1.connectToDatabase)();
         const { id } = req.params;
         const user = yield models_1.User.findById(id).exec();
         if (!user) {
@@ -98,7 +98,6 @@ router.put("/updateUserStatus/:id", (req, res) => __awaiter(void 0, void 0, void
 // Delete Job Category
 router.delete("/deleteUser/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, db_1.connectToDatabase)();
         const { id } = req.params;
         yield models_1.User.findByIdAndDelete(id);
         res.status(200).json({ message: "User deleted successfully" });

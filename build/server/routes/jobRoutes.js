@@ -20,16 +20,6 @@ const jobRouter = express_1.default.Router();
  * Job Category Endpoints
  * ------------------------
  */
-jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        console.log('Hello');
-        const categories = yield models_1.JobCategory.find();
-        res.json(categories);
-    }
-    catch (error) {
-        res.status(500).json({ error: "Error fetching job categories" });
-    }
-}));
 // 
 jobRouter.post("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -101,7 +91,7 @@ jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0,
 jobRouter.get("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // const jobs = await Job.find().populate("userId", "name email");
-        const jobs = yield models_1.Job.find();
+        const jobs = yield models_1.Job.find().populate("assigned", "name email");
         res.json(jobs);
     }
     catch (error) {
@@ -151,6 +141,61 @@ jobRouter.delete("/jobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
     catch (error) {
         res.status(500).json({ error: "Error deleting job" });
+    }
+}));
+// ------
+// JOb assignement
+// -------
+jobRouter.put("/assign/:jobId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.body;
+        const job = yield models_1.Job.findById(req.params.jobId);
+        if (!job)
+            return res.status(404).json({ message: "Job not found" });
+        console.log(userId);
+        if (!job.assigned.includes(userId)) {
+            job.assigned.push(userId);
+        }
+        yield job.save();
+        res.json(job);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}));
+jobRouter.get("/assigned/:jobId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const job = yield models_1.Job.findById(req.params.jobId).populate("assigned", "name email"); // Fetch recruiters
+        if (!job)
+            return res.status(404).json({ message: "Job not found" });
+        res.json(job.assigned); // Return assigned recruiters
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}));
+jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log('Hello');
+        const categories = yield models_1.JobCategory.find();
+        res.json(categories);
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error fetching job categories" });
+    }
+}));
+jobRouter.delete("/jobs/unassign/:jobId/:recruiterId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { jobId, recruiterId } = req.params;
+    try {
+        const updatedJob = yield models_1.Job.findByIdAndUpdate(jobId, { $pull: { assigned: { _id: recruiterId } } }, { new: true });
+        if (!updatedJob) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+        res.status(200).json({ message: "Recruiter unassigned", job: updatedJob });
+    }
+    catch (error) {
+        console.error("Error unassigning recruiter:", error);
+        res.status(500).json({ message: "Server error" });
     }
 }));
 exports.default = jobRouter;

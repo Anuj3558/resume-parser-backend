@@ -4,11 +4,11 @@ import express, {Request, Response} from "express"
 import {User} from "../models"
 import {connectToDatabase} from "../utils/db"
 import e from "express"
+import {hash} from "bcryptjs"
 const router = express.Router()
 
 router.get("/getUsers", async (req: Request, res: Response) => {
 	try {
-		connectToDatabase()
 		const users = await User.find()
 		res.status(200).json(users)
 	} catch (error) {
@@ -22,33 +22,37 @@ router.get("/getUsers", async (req: Request, res: Response) => {
 
 router.post("/addUser", async (req: any, res: any) => {
 	try {
-		connectToDatabase()
-		const {name, email, role, status} = req.body
-		if (!name || !email || !role || !status) {
+		const {name, email, status} = req.body
+		let {password} = req.body
+		if (!name || !email || !status || !password) {
 			return res.status(400).json({message: "Please fill all fields"})
 		}
-		const user = new User({name, email, role, status})
+		password = await hash(password, 10)
+		const user = new User({name, email, status, password})
 		await user.save()
 		res.status(201).json({message: "Users added successfully"})
 	} catch (error) {}
 })
 
+
+
 // Update Job Category
 router.put("/updateUser/:id", async (req: any, res: any) => {
 	try {
-		connectToDatabase()
-
 		const {id} = req.params
-		const {name, email, role, status} = req.body
+		const {name, email, status} = req.body
+		let password = req.body.password
 
-		if (!name || !email || !role || !status) {
+		password = await hash(password, 10)
+
+		if (!name || !email || !status || !password) {
 			return res.status(400).json({message: "Please fill all fields"})
 		}
 
 		const updatedUser = await User.findByIdAndUpdate(id, {
 			name,
 			email,
-			role,
+			password,
 			status,
 		}).exec()
 
@@ -65,7 +69,6 @@ router.put("/updateUser/:id", async (req: any, res: any) => {
 
 router.put("/updateUserStatus/:id", async (req: any, res: any) => {
 	try {
-		connectToDatabase()
 		const {id} = req.params
 
 		const user = await User.findById(id).exec()
@@ -90,7 +93,6 @@ router.put("/updateUserStatus/:id", async (req: any, res: any) => {
 // Delete Job Category
 router.delete("/deleteUser/:id", async (req: any, res: any) => {
 	try {
-		connectToDatabase()
 		const {id} = req.params
 		await User.findByIdAndDelete(id)
 		res.status(200).json({message: "User deleted successfully"})
