@@ -25,6 +25,7 @@ const demoUser = {
     password: 'admin',
     email: 'admin@gmail.com',
     role: 'admin',
+    category: "ADMIN",
     status: "ACTIVE" // Optional: Add a role for the demo user
 };
 // Function to insert demo credentials into the database
