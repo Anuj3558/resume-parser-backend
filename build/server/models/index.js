@@ -51,6 +51,7 @@ const JobSchema = new mongoose_1.Schema({
     status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
     assigned: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }],
     // users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
+    initiator: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
     resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
 });
 const userSchema = new mongoose_1.Schema({

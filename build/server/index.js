@@ -18,6 +18,7 @@ const authRoutes_1 = __importDefault(require("./auth/authRoutes"));
 const jobRoutes_1 = __importDefault(require("./routes/jobRoutes"));
 const db_1 = require("./utils/db");
 const AdminAnalyticsRoute_1 = __importDefault(require("./routes/AdminAnalyticsRoute"));
+const recruiterRoutes_1 = __importDefault(require("./routes/recruiterRoutes"));
 const app = (0, express_1.default)();
 const PORT = 4000;
 exports.inputDir = path_1.default.join(__dirname, "input");
@@ -44,6 +45,7 @@ app.use("/files", fileRoutes_1.default);
 app.use("/results", resultRoutes_1.default);
 app.use("/job", jobRoutes_1.default);
 app.use("/user", userRoutes_1.default);
+app.use("/recruiter", recruiterRoutes_1.default);
 app.get("/", (req, res) => {
     //res.sendFile(path.join(__dirname, "views", "index.html"))
 });

@@ -11,8 +11,9 @@ dotenv.config()
 
 import authRoutes from "./auth/authRoutes"
 import jobRouter from "./routes/jobRoutes"
-import { connectToDatabase } from "./utils/db"
+import {connectToDatabase} from "./utils/db"
 import Adminrouter from "./routes/AdminAnalyticsRoute"
+import recruiterRoutes from "./routes/recruiterRoutes"
 
 const app = express()
 const PORT = 4000
@@ -20,7 +21,7 @@ const PORT = 4000
 export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
-connectToDatabase();
+connectToDatabase()
 
 // Middleware
 app.use(express.static("views"))
@@ -47,6 +48,7 @@ app.use("/files", fileRoutes)
 app.use("/results", resultRoutes)
 app.use("/job", jobRouter)
 app.use("/user", userRoutes)
+app.use("/recruiter", recruiterRoutes)
 
 app.get("/", (req: Request, res: Response) => {
 	//res.sendFile(path.join(__dirname, "views", "index.html"))
