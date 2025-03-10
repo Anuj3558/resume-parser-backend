@@ -2,119 +2,197 @@ import { Router } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { FileArray, UploadedFile } from 'express-fileupload';
+import mongoose from 'mongoose';
+import { Job, User } from '../models/index'; // Adjust import path as needed
 
 const router = Router();
-const uploadDir = path.join(__dirname, '../../input');
+const inputDir = path.join(__dirname, '../../input');
 
-// Ensure the uploads directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+// Ensure the input directory exists
+if (!fs.existsSync(inputDir)) {
+  fs.mkdirSync(inputDir);
 }
 
-// Generate HTML snippet for a single file
-const generateFileHtml = (fileName: string): string => {
-  const filePath = `/input/${fileName}`;
-  return `<li><span class="cursor-pointer" onclick="window.location.href='${filePath}'; " target="_blank">${fileName}</span></li>`;
-};
-
-
-
-  
-
-
-// Interface for file response
-interface FileResponse {
-  name: string;
-  path: string;
-  uploadDate: Date;
-}
-
-// Handle file uploads
-router.post('/upload', async (req: any, res: any) => {
+// Handle resume upload for a specific job and user
+router.post('/:jobId', async (req: any, res: any) => {
   try {
-    if (!req.files || !req.files.pdf) {
-      return res.status(400).json({ error: 'No files were uploaded.' });
+    // Check if files were uploaded
+    if (!req.files || !req.files.resume) {
+      return res.status(400).json({ error: 'No resume files were uploaded.' });
     }
 
-    const files = Array.isArray(req.files.pdf) ? req.files.pdf : [req.files.pdf];
+    // Get job ID from params
+    const { jobId } = req.params;
+    console.log(jobId)
+    // Validate jobId
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ error: 'Invalid job ID format.' });
+    }
+
+    // Get user ID from request (assuming user is authenticated)
+    const userId = req.body.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+
+    // Fetch job and user information
+    const job = await Job.findById(jobId);
+    const user = await User.findById(userId);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Create directory structure: input/userId/jobTitle/
+    const userDir = path.join(inputDir, userId.toString());
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir);
+    }
+
+    // Sanitize job title for directory name (remove special chars and spaces)
+    const sanitizedJobTitle = job.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const jobDir = path.join(userDir, sanitizedJobTitle);
+    if (!fs.existsSync(jobDir)) {
+      fs.mkdirSync(jobDir);
+    }
+
+    // Handle single or multiple resume files
+    const files = Array.isArray(req.files.resume) ? req.files.resume : [req.files.resume];
     
     const uploadPromises = files.map(async (file: UploadedFile) => {
-      const uploadPath = path.join(uploadDir, file.name);
-      await file.mv(uploadPath);
+      // Generate unique filename to prevent overwriting
+      const timestamp = new Date().getTime();
+      const fileExtension = path.extname(file.name);
+      const fileName = `${path.basename(file.name, fileExtension)}_${timestamp}${fileExtension}`;
+      
+      // Check if file is a PDF
+      if (fileExtension.toLowerCase() !== '.pdf') {
+        throw new Error(`File ${file.name} is not a PDF.`);
+      }
+      
+      const filePath = path.join(jobDir, fileName);
+      const relativePath = path.relative(inputDir, filePath);
+      
+      // Move file to destination
+      await file.mv(filePath);
+      
+      // Return resume info
       return {
-        name: file.name,
-        path: `/input/${file.name}`,
-        uploadDate: new Date()
+        name: fileName,
+        filePath: `/input/${relativePath}`,
+        evaluation: null // Evaluation will be added later
       };
     });
 
-    const uploadedFiles = await Promise.all(uploadPromises);
-    res.json({ files: uploadedFiles });
+    // Wait for all files to be processed
+    const uploadedResumes = await Promise.all(uploadPromises);
+
+    // Update job with resume information
+    const updatedJob = await Job.findByIdAndUpdate(
+      jobId,
+      { 
+        $push: { 
+          resumes: { $each: uploadedResumes } 
+        },
+        $inc: { resumeMatches: uploadedResumes.length }
+      },
+      { new: true }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `${uploadedResumes.length} resume(s) uploaded successfully`,
+      job: updatedJob
+    });
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Error uploading files.' });
+    console.error('Resume upload error:', error);
+    res.status(500).json({ 
+      error: 'Error uploading resume files.',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
-// Fetch all uploaded files
-router.get('/list', (req, res) => {
+// Get all resumes for a specific job
+router.get('/:jobId', async (req: any, res: any) => {
   try {
-    const files = fs.readdirSync(uploadDir);
-    const fileList: FileResponse[] = files.map(filename => ({
-      name: filename,
-      path: `/input/${filename}`,
-      uploadDate: fs.statSync(path.join(uploadDir, filename)).mtime
-    }));
-    res.json({ files: fileList });
+    const { jobId } = req.params;
+    
+    // Validate jobId
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ error: 'Invalid job ID format.' });
+    }
+    
+    const job = await Job.findById(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    
+    res.json({ 
+      success: true,
+      resumes: job.resumes 
+    });
   } catch (error) {
-    console.error('List error:', error);
-    res.status(500).json({ error: 'Error fetching file list.' });
+    console.error('Fetch job resumes error:', error);
+    res.status(500).json({ error: 'Error fetching job resumes.' });
   }
 });
 
-// Get specific PDF file
-router.get('/pdf/:filename', (req: any, res: any) => {
+// Delete a specific resume
+router.delete('/delete-resume/:jobId/:resumeName', async (req: any, res: any) => {
   try {
-    const { filename } = req.params;
-    if (!filename.toLowerCase().endsWith('.pdf')) {
-      return res.status(400).json({ error: 'Invalid file type.' });
+    const { jobId, resumeName } = req.params;
+    const userId = req.user?._id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+    
+    // Validate jobId
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ error: 'Invalid job ID format.' });
+    }
+    
+    const job = await Job.findById(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
     }
 
-    const filePath = path.join(uploadDir, filename);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found.' });
+    // Find resume in the job's resumes array
+    const resumeIndex: number = job.resumes.findIndex((resume: { name: string }) => resume.name === resumeName);
+    
+    if (resumeIndex === -1) {
+      return res.status(404).json({ error: 'Resume not found.' });
     }
-
-    res.sendFile(filePath);
+    
+    const resumeToDelete = job.resumes[resumeIndex];
+    
+    // Remove the file
+    const filePath = path.join(inputDir, resumeToDelete.filePath.replace('/input/', ''));
+    
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    
+    // Update the job document
+    job.resumes.splice(resumeIndex, 1);
+    job.resumeMatches -= 1;
+    await job.save();
+    
+    res.json({
+      success: true,
+      message: 'Resume deleted successfully'
+    });
   } catch (error) {
-    console.error('PDF fetch error:', error);
-    res.status(500).json({ error: 'Error fetching PDF.' });
-  }
-});
-
-// Delete specific file
-router.delete('/:filename', (req:any, res:any) => {
-  try {
-    const { filename } = req.params;
-    const filePath = path.join(uploadDir, filename);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found.' });
-    }
-
-    // Verify it's a PDF file
-    if (!filename.toLowerCase().endsWith('.pdf')) {
-      return res.status(400).json({ error: 'Invalid file type.' });
-    }
-
-    // Delete the file
-    fs.unlinkSync(filePath);
-
-    res.json({ message: 'File deleted successfully' });
-  } catch (error) {
-    console.error('Delete error:', error);
-    res.status(500).json({ error: 'Error deleting file.' });
+    console.error('Delete resume error:', error);
+    res.status(500).json({ error: 'Error deleting resume.' });
   }
 });
 

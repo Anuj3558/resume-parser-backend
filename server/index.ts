@@ -14,6 +14,7 @@ import {connectToDatabase} from "./utils/db"
 import Adminrouter from "./routes/AdminAnalyticsRoute"
 import recruiterRoutes from "./routes/recruiterRoutes"
 import Filerouter from "./routes/resultRoutes"
+import Analyzerouter from "./routes/resultRoutes"
 
 const app = express()
 const PORT = 4000
@@ -45,9 +46,10 @@ app.use("/auth", authRoutes)
 app.use("/api", Adminrouter)
 // Protected routes
 app.use("/resumes",Filerouter)
-app.use("/files", fileRoutes)
+app.use("/upload-resume", fileRoutes)
 app.use("/job", jobRouter)
 app.use("/user", userRoutes)
+app.use("/process-resumes", Analyzerouter)
 app.use("/recruiter", recruiterRoutes)
 
 app.get("/", (req: Request, res: Response) => {

@@ -129,7 +129,7 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
                 description,
                 requirements,
                 location,
-                initiator: initiator[1],
+                initiator: initiator,
             });
             yield job.save();
             console.log("Received", job);

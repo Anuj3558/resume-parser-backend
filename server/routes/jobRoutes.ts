@@ -137,7 +137,7 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 				description,
 				requirements,
 				location,
-				initiator: initiator[1],
+				initiator: initiator,
 			})
 			await job.save()
 			console.log("Received", job)
