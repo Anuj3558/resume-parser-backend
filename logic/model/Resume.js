@@ -1,13 +1,18 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const mongoose = require("mongoose");
 
-const resumeSchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
-    fileUrl: { type: String, required: true },
-    parsedData: { type: Object, required: true },
-    score: { type: Number, required: true },
-    timestamp: { type: Date, default: Date.now },
+const ResumeSchema = new mongoose.Schema({
+  filename: { type: String, required: true },
+  uploadDate: { type: Date, default: Date.now },
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  jobTitle: { type: String, required: false }, // New field to associate resumes with jobs
+  status: { type: String, enum: ["pending", "processed", "deleted"], default: "pending" },
+  
+  analysisResult: {
+    result: { type: String, enum: ["pass", "fail", "pending"], default: "pending" },
+    education: { type: String },
+    gpa: { type: Number },
+    summary: { type: String },
+  },
 });
 
-module.exports = mongoose.model('Resume', resumeSchema);
+module.exports = mongoose.model("Resume", ResumeSchema);
