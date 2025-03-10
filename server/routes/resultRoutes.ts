@@ -1,93 +1,63 @@
-import { Router, Request, Response } from 'express';
-import { processResumes } from '../../index';
+import mongoose, { Schema } from "mongoose";
 import path from 'path';
 import fs from 'fs';
-import { invokeAnthropicForJob } from '../../anthropic';
-import PdfParse from 'pdf-parse';
-import { extractTextFromPdf } from '../../pdf-extract';
+import multer from 'multer';
+import express, { Request, Response, NextFunction } from 'express';
 
-const router = Router();
+const Filerouter = express.Router();
 
-router.get('/process-resumes', async (req: any, res: any) => {
-  try {
-    const inputDir = path.join(__dirname, '..', '..', 'input');
-    const outputDir = path.join(__dirname, '..', '..', 'output');
+// Define the directory for storing uploaded files
+const inputDir = path.join(__dirname, '..', '..', 'input');
 
-    // Ensure directories exist
-    if (!fs.existsSync(inputDir)) {
-      return res.status(400).json({ error: 'Input directory does not exist' });
+// Function to ensure directory exists
+const ensureDirExists = (dirPath: string) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
     }
+};
 
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+// Multer configuration for file storage
+const storage = multer.diskStorage({
+    destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
+        const userId = req.params.userId;
+        const jobTitle = req.params.jobTitle;
+        const uploadDir = path.join(inputDir, userId, jobTitle);
+        ensureDirExists(uploadDir);
+        cb(null, uploadDir);
+    },
+    filename: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
+        cb(null, file.originalname); // Use original name
     }
-
-    // Process resumes
-    const results = await processResumes(inputDir, outputDir);
-
-    // Read processed results
-    const processedFile = path.join(outputDir, 'processed.csv');
-    if (!fs.existsSync(processedFile)) {
-      return res.status(404).json({ error: 'Processed file not found' });
-    }
-
-    const processedData = fs.readFileSync(processedFile, 'utf-8');
-    const rows = processedData.split('\n').slice(1); // Skip header
-    
-    const formattedResults = rows
-      .filter(row => row.trim())
-      .map(row => {
-        const columns = row.split(',').map(col => col.replace(/^"(.*)"$/, '$1'));
-        return {
-          response: {
-            name: columns[0],
-            result: columns[1],
-            college: columns[2],
-            degree: columns[6],
-            gpa: columns[8],
-            summary: columns[12]
-          }
-        };
-      });
-
-    res.json({ results: formattedResults });
-  } catch (error) {
-    console.error('Error processing resumes:', error);
-    res.status(500).json({ error: 'Error processing resumes' });
-  }
 });
 
-router.get("/process-resume/:jobPosition", async (req: any, res: any) => {
-  try {
-    const { jobPosition } = req.params; // Get job position from URL
-    const inputDir = path.join(__dirname, "..", "..", "input");
+const upload = multer({ storage: storage });
 
-    if (!fs.existsSync(inputDir)) {
-      return res.status(400).json({ error: "Input directory does not exist" });
-    }
+/**
+ * @route   POST /resumes/upload/:userId/:jobTitle
+ * @desc    Upload resumes for a specific user and job title
+ * @access  Private
+ */
+Filerouter.post('/upload/:userId/:jobTitle', upload.array('resumes'), async (req: Request, res: Response): Promise<void> => {
+    try {
+        if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+            res.status(400).json({ message: 'No files uploaded.' });
+            return;
+        }
 
-    const resumeFiles = fs.readdirSync(inputDir).filter((file) => file.endsWith(".pdf"));
-    if (resumeFiles.length === 0) {
-      return res.status(400).json({ error: "No resumes found in input directory" });
-    }
-    const results: any[] = [];
-    for (const file of resumeFiles) {
-      const filePath = path.join(inputDir, file);
-      const resumeText = await extractTextFromPdf(filePath);
-      try {
-        const evaluation = await invokeAnthropicForJob(resumeText, jobPosition);
-        results.push({ name: file, response: evaluation.response });
-      } catch (error) {
-        console.error(`Error processing ${file}:`, error);
-        results.push({ name: file, error: "Anthropic API Error" });
-      }
-    }
+        const userId = req.params.userId;
+        const jobTitle = req.params.jobTitle;
 
-    res.json({ results });
-  } catch (error) {
-    console.error("Error processing resumes:", error);
-    res.status(500).json({ error: "Error processing resumes" });
-  }
+        // Map the files array to include file paths
+        const files = Array.from(req.files as unknown as Express.Multer.File[]).map(file => ({
+            name: file.originalname,
+            filePath: path.join(inputDir, userId, jobTitle, file.originalname)
+        }));
+
+        res.status(200).json({ message: 'Files uploaded successfully.', files: files });
+    } catch (error) {
+        console.error("File upload error:", error);
+        res.status(500).json({ message: 'File upload failed.', error: error });
+    }
 });
 
-export default router;
+export default Filerouter;

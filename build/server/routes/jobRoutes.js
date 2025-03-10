@@ -102,14 +102,23 @@ jobRouter.get("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function*
 jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Hiii");
     try {
-        const { userId, initiator, title, category, description, requirements, location, } = req.body;
-        console.log("Hiii", userId, initiator, title, category, description, requirements, location);
+        const { initiator, title, category, description, requirements, location, } = req.body;
+        // console.log(
+        // 	"Hiii",
+        // 	initiator,
+        // 	title,
+        // 	category,
+        // 	description,
+        // 	requirements,
+        // 	location
+        // )
+        console.log(initiator[1]);
         if (!title ||
             !category ||
             !description ||
             !requirements ||
             !location ||
-            !initiator) {
+            !initiator[1]) {
             return res.status(400).json({ error: "Please fill all fields" });
         }
         else {
@@ -120,7 +129,7 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
                 description,
                 requirements,
                 location,
-                initiator,
+                initiator: initiator[1],
             });
             yield job.save();
             console.log("Received", job);

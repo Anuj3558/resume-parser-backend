@@ -3,7 +3,6 @@ import fileUpload from "express-fileupload"
 import path from "path"
 import cors from "cors"
 import fileRoutes from "./routes/fileRoutes"
-import resultRoutes from "./routes/resultRoutes"
 import userRoutes from "./routes/userRoutes"
 import fs from "fs"
 import dotenv from "dotenv"
@@ -14,6 +13,7 @@ import jobRouter from "./routes/jobRoutes"
 import {connectToDatabase} from "./utils/db"
 import Adminrouter from "./routes/AdminAnalyticsRoute"
 import recruiterRoutes from "./routes/recruiterRoutes"
+import Filerouter from "./routes/resultRoutes"
 
 const app = express()
 const PORT = 4000
@@ -44,8 +44,8 @@ app.use(
 app.use("/auth", authRoutes)
 app.use("/api", Adminrouter)
 // Protected routes
+app.use("/resumes",Filerouter)
 app.use("/files", fileRoutes)
-app.use("/results", resultRoutes)
 app.use("/job", jobRouter)
 app.use("/user", userRoutes)
 app.use("/recruiter", recruiterRoutes)

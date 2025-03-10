@@ -102,7 +102,6 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 	console.log("Hiii")
 	try {
 		const {
-			userId,
 			initiator,
 			title,
 			category,
@@ -111,23 +110,23 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 			location,
 		} = req.body
 
-		console.log(
-			"Hiii",
-			userId,
-			initiator,
-			title,
-			category,
-			description,
-			requirements,
-			location
-		)
+		// console.log(
+		// 	"Hiii",
+		// 	initiator,
+		// 	title,
+		// 	category,
+		// 	description,
+		// 	requirements,
+		// 	location
+		// )
+		console.log(initiator[1])
 		if (
 			!title ||
 			!category ||
 			!description ||
 			!requirements ||
 			!location ||
-			!initiator
+			!initiator[1]
 		) {
 			return res.status(400).json({error: "Please fill all fields"})
 		} else {
@@ -138,7 +137,7 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 				description,
 				requirements,
 				location,
-				initiator,
+				initiator: initiator[1],
 			})
 			await job.save()
 			console.log("Received", job)
