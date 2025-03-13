@@ -55,7 +55,6 @@ const JobSchema = new mongoose_1.Schema({
 });
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
-    username: { type: String, required: true, unique: true }, // New username field
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     category: { type: String, Enum: ["ADMIN", "USER"] },
