@@ -24,11 +24,12 @@ router.post("/addUser", async (req: any, res: any) => {
 	try {
 		const {name, email, status} = req.body
 		let {password} = req.body
+		const category = "USER";
 		if (!name || !email || !status || !password) {
 			return res.status(400).json({message: "Please fill all fields"})
 		}
 		password = await hash(password, 10)
-		const user = new User({name, email, status, password})
+		const user = new User({name, email, status, password,category})
 		await user.save()
 		res.status(201).json({message: "Users added successfully"})
 	} catch (error) {}

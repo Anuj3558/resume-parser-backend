@@ -96,28 +96,64 @@ function getPromptFromExcel(jobPosition: string): string | null {
   return entry ? entry.Prompt : null;
 }
 
-export async function invokeAnthropicForJob(pdfExtract: string, jobPosition: string): Promise<JobEvaluation> {
+export async function invokeAnthropicForJob(
+  pdfExtract: string,
+  jobTitle: string,
+  jobDescription: string
+): Promise<JobEvaluation> {
   const anthropic = new Anthropic({
-    apiKey:process.env.ANTHROPIC_API_KEY,
+    apiKey: process.env.ANTHROPIC_API_KEY,
   });
 
-  const prompt = getPromptFromExcel(jobPosition);
-  if (!prompt) {
-    throw new Error(`No prompt found for job position: ${jobPosition}`);
-  }
- 
-  const formattedPrompt = prompt+pdfExtract;
-   
+  // Construct the prompt dynamically using job title, job description, and PDF text
+  const prompt = `
+    Job Title: ${jobTitle}
+    Job Description: ${jobDescription}
+
+    Evaluate the following resume for the above job:
+    ${pdfExtract}
+
+    Use the following rubric for evaluation:
+    - College Reputation: 1 to 4
+    - Degree Fit: 1 to 3
+    - GPA: 1 to 4
+    - Motivation & Projects: 1 to 6
+    - Bonus Points: Max 3
+
+    Return ONLY a JSON in this format:
+    {
+      name: string,
+      result: "Success" | "Fail",
+      college: string,
+      city: string,
+      phone: string,
+      gender: "Male" | "Female" | "Unknown",
+      degree: string,
+      year: string,
+      gpa: string,
+      interest1: string,
+      interest2: string,
+      interest3: string,
+      summary: string,
+      points: {
+        collegeReputation: number,
+        degree: number,
+        gpa: number,
+        projects: number,
+        bonus: number
+      }
+    }
+  `;
+
   const completion = await anthropic.messages.create({
     model: "claude-3-5-sonnet-20240620",
     max_tokens: 4096,
-    messages: [{ role: "user", content: formattedPrompt }],
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.0,
   });
 
   const response =
     completion.content[0].type === "text" ? completion.content[0].text : "";
-    
 
   return { response: JSON.parse(response), tokens: completion.usage };
 }

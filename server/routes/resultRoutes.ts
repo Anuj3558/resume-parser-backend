@@ -1,93 +1,101 @@
-import { Router, Request, Response } from 'express';
-import { processResumes } from '../../index';
+import mongoose, { Schema } from "mongoose";
 import path from 'path';
 import fs from 'fs';
-import { invokeAnthropicForJob } from '../../anthropic';
-import PdfParse from 'pdf-parse';
-import { extractTextFromPdf } from '../../pdf-extract';
+import multer from 'multer';
+import express, { Request, Response, NextFunction } from 'express';
+import { extractTextFromPdf } from "../../pdf-extract";
+import { invokeAnthropicForJob } from "../../anthropic";
+import { Job, ResumeAnalysed } from "../models";
 
-const router = Router();
+const Analyzerouter = express.Router();
+const inputDir = path.join(__dirname, '../../input');
 
-router.get('/process-resumes', async (req: any, res: any) => {
-  try {
-    const inputDir = path.join(__dirname, '..', '..', 'input');
-    const outputDir = path.join(__dirname, '..', '..', 'output');
 
-    // Ensure directories exist
-    if (!fs.existsSync(inputDir)) {
-      return res.status(400).json({ error: 'Input directory does not exist' });
+Analyzerouter.post('/:jobId/:userId', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.params.userId;
+        const jobId = req.params.jobId;
+
+        // Check if jobId is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(jobId)) {
+            res.status(400).json({ message: 'Invalid job ID.' });
+            return;
+        }
+
+        // Convert jobId string to MongoDB ObjectId
+        const jobObjectId = new mongoose.Types.ObjectId(jobId);
+
+        // Find the job by its ObjectId
+        const jobVal = await Job.findOne({ _id: jobObjectId });
+        if (!jobVal) {
+            res.status(404).json({ message: 'Job not found.' });
+            return;
+        }
+
+    const sanitizedJobTitle = jobVal.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    // Construct the directory path
+        const jobDir = path.join(inputDir, userId,sanitizedJobTitle );
+        console.log(jobDir);
+
+        // Check if the directory exists
+        if (!fs.existsSync(jobDir)) {
+            res.status(404).json({ message: 'Job directory not found.' });
+            return;
+        }
+
+        // Read all resume files in the directory
+        const resumeFiles = fs.readdirSync(jobDir).filter(file => file.endsWith('.pdf'));
+
+        if (resumeFiles.length === 0) {
+            res.status(400).json({ message: 'No resumes found in the directory.' });
+            return;
+        }
+
+        // Fetch the job details from the database
+        const job = await Job.findOne({ _id: jobObjectId, initiator: userId });
+        if (!job) {
+            res.status(404).json({ message: 'Job not found.' });
+            return;
+        }
+
+        // Process each resume
+        for (const resumeFile of resumeFiles) {
+            const resumePath = path.join(jobDir, resumeFile);
+
+            // Extract text from the resume
+            const resumeText = await extractTextFromPdf(resumePath);
+           console.log(resumeText);
+            // Send the text to Anthropic for evaluation
+            const evaluation = await invokeAnthropicForJob(resumeText, job.description, job.requirements);
+            console.log(evaluation);
+            // Save the evaluation result in the ResumeAnalysed schema
+            const resumeAnalysed = new ResumeAnalysed({
+                resumeId: new mongoose.Types.ObjectId(), // Generate a new ID for the resume
+                jobId: job._id,
+                candidateName: evaluation.response.name || 'Unknown',
+                education: evaluation.response.college || 'Unknown',
+                skills: evaluation.response.skills || 'Unknown',
+                summary: evaluation.response.summary || 'No summary available',
+                result: evaluation.response.result || 'Fail',
+                timestamp: new Date(),
+            });
+
+            await resumeAnalysed.save();
+
+            // Update the job's resumes array with the evaluation result
+            job.resumes.push({
+                name: resumeFile,
+                filePath: resumePath,
+                evaluation: evaluation.response,
+            });
+
+            await job.save();
+        }
+
+        res.status(200).json({ message: 'Resumes processed successfully.', jobId: job._id });
+    } catch (error) {
+        console.error("Error processing resumes:", error);
+        res.status(500).json({ message: 'Failed to process resumes.', error: (error as any).message });
     }
-
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Process resumes
-    const results = await processResumes(inputDir, outputDir);
-
-    // Read processed results
-    const processedFile = path.join(outputDir, 'processed.csv');
-    if (!fs.existsSync(processedFile)) {
-      return res.status(404).json({ error: 'Processed file not found' });
-    }
-
-    const processedData = fs.readFileSync(processedFile, 'utf-8');
-    const rows = processedData.split('\n').slice(1); // Skip header
-    
-    const formattedResults = rows
-      .filter(row => row.trim())
-      .map(row => {
-        const columns = row.split(',').map(col => col.replace(/^"(.*)"$/, '$1'));
-        return {
-          response: {
-            name: columns[0],
-            result: columns[1],
-            college: columns[2],
-            degree: columns[6],
-            gpa: columns[8],
-            summary: columns[12]
-          }
-        };
-      });
-
-    res.json({ results: formattedResults });
-  } catch (error) {
-    console.error('Error processing resumes:', error);
-    res.status(500).json({ error: 'Error processing resumes' });
-  }
 });
-
-router.get("/process-resume/:jobPosition", async (req: any, res: any) => {
-  try {
-    const { jobPosition } = req.params; // Get job position from URL
-    const inputDir = path.join(__dirname, "..", "..", "input");
-
-    if (!fs.existsSync(inputDir)) {
-      return res.status(400).json({ error: "Input directory does not exist" });
-    }
-
-    const resumeFiles = fs.readdirSync(inputDir).filter((file) => file.endsWith(".pdf"));
-    if (resumeFiles.length === 0) {
-      return res.status(400).json({ error: "No resumes found in input directory" });
-    }
-    const results: any[] = [];
-    for (const file of resumeFiles) {
-      const filePath = path.join(inputDir, file);
-      const resumeText = await extractTextFromPdf(filePath);
-      try {
-        const evaluation = await invokeAnthropicForJob(resumeText, jobPosition);
-        results.push({ name: file, response: evaluation.response });
-      } catch (error) {
-        console.error(`Error processing ${file}:`, error);
-        results.push({ name: file, error: "Anthropic API Error" });
-      }
-    }
-
-    res.json({ results });
-  } catch (error) {
-    console.error("Error processing resumes:", error);
-    res.status(500).json({ error: "Error processing resumes" });
-  }
-});
-
-export default router;
+export default Analyzerouter;

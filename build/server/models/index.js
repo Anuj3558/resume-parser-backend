@@ -32,9 +32,14 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.JobCategory = exports.Job = void 0;
+exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const path_1 = __importDefault(require("path"));
+const inputDir = path_1.default.join(__dirname, '..', '..', 'input');
 const JobCategorySchema = new mongoose_1.default.Schema({
     id: { type: mongoose_1.default.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
     name: { type: String, required: true, unique: true },
@@ -50,8 +55,14 @@ const JobSchema = new mongoose_1.Schema({
     resumeMatches: { type: Number, default: 0 },
     status: { type: String, enum: ["OPEN", "CLOSED"], required: true, default: "OPEN" },
     assigned: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }],
-    // users: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
-    resumes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
+    initiator: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
+    resumes: [
+        {
+            name: { type: String, required: true }, // Name of the resume file
+            filePath: { type: String, required: true }, // Path to the resume file in the input directory
+            evaluation: { type: Object }, // Evaluation result from Anthropic
+        },
+    ],
 });
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
@@ -64,9 +75,21 @@ const userSchema = new mongoose_1.Schema({
     role: { type: String },
     status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
 });
+const resumeAnalysedSchema = new mongoose_1.Schema({
+    resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Resume', required: true },
+    jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Job', required: true },
+    candidateName: { type: String, required: true },
+    education: { type: String, required: true },
+    skills: { type: String, required: true },
+    summary: { type: String, required: true },
+    result: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+});
 const User = mongoose_1.default.model("User", userSchema);
 exports.User = User;
 const JobCategory = mongoose_1.default.model("JobCategory", JobCategorySchema);
 exports.JobCategory = JobCategory;
-const Job = mongoose_1.default.model("JobSchema", JobSchema);
+const Job = mongoose_1.default.model("Job", JobSchema); // Corrected model name
 exports.Job = Job;
+const ResumeAnalysed = mongoose_1.default.model('ResumeAnalysed', resumeAnalysedSchema);
+exports.ResumeAnalysed = ResumeAnalysed;

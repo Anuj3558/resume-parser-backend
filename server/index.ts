@@ -3,7 +3,6 @@ import fileUpload from "express-fileupload"
 import path from "path"
 import cors from "cors"
 import fileRoutes from "./routes/fileRoutes"
-import resultRoutes from "./routes/resultRoutes"
 import userRoutes from "./routes/userRoutes"
 import fs from "fs"
 import dotenv from "dotenv"
@@ -11,7 +10,11 @@ dotenv.config()
 
 import authRoutes from "./auth/authRoutes"
 import jobRouter from "./routes/jobRoutes"
-import { connectToDatabase } from "./utils/db"
+import {connectToDatabase} from "./utils/db"
+import Adminrouter from "./routes/AdminAnalyticsRoute"
+import recruiterRoutes from "./routes/recruiterRoutes"
+import Filerouter from "./routes/resultRoutes"
+import Analyzerouter from "./routes/resultRoutes"
 
 const app = express()
 const PORT = 4000
@@ -20,6 +23,7 @@ export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
 connectToDatabase()
+
 // Middleware
 app.use(express.static("views"))
 app.use("/input", express.static(inputDir))
@@ -39,11 +43,14 @@ app.use(
 
 // Routes
 app.use("/auth", authRoutes)
+app.use("/api", Adminrouter)
 // Protected routes
-app.use("/files", fileRoutes)
-app.use("/results", resultRoutes)
+app.use("/resumes",Filerouter)
+app.use("/upload-resume", fileRoutes)
 app.use("/job", jobRouter)
 app.use("/user", userRoutes)
+app.use("/process-resumes", Analyzerouter)
+app.use("/recruiter", recruiterRoutes)
 
 app.get("/", (req: Request, res: Response) => {
 	//res.sendFile(path.join(__dirname, "views", "index.html"))
