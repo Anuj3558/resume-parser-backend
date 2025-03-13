@@ -11,16 +11,16 @@ const Analyzerouter = express.Router();
 const inputDir = path.join(__dirname, '../../input');
 
 
-Analyzerouter.post('/:jobId/:userId', async (req: Request, res: Response): Promise<void> => {
+Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> => {
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
-
+        console.log("job id->", jobId)
         // Check if jobId is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ message: 'Invalid job ID.' });
-            return;
-        }
+        // if (!mongoose.Types.ObjectId.isValid(jobId)) {
+        //     res.status(400).json({ message: 'Invalid job ID.' });
+        //     return;
+        // }
 
         // Convert jobId string to MongoDB ObjectId
         const jobObjectId = new mongoose.Types.ObjectId(jobId);
@@ -98,4 +98,36 @@ Analyzerouter.post('/:jobId/:userId', async (req: Request, res: Response): Promi
         res.status(500).json({ message: 'Failed to process resumes.', error: (error as any).message });
     }
 });
+
+
+
+// Get all analyzed resumes
+Analyzerouter.get("/getAllResumes", async (req: any, res: any) => {
+    try {
+        const resumes = await ResumeAnalysed.find().populate("resumeId").populate("jobId");
+        res.status(200).json(resumes);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+// Get analyzed resume by ID
+Analyzerouter.get("/getResume/:id", async (req: any, res: any) => {
+    try {
+        const { id } = req.params;
+        const resume = await ResumeAnalysed.findById(id).populate("resumeId").populate("jobId");
+
+        if (!resume) {
+            return res.status(404).json({ message: "Resume not found" });
+        }
+
+        res.status(200).json(resume);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+
 export default Analyzerouter;
