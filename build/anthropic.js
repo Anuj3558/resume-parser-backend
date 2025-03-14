@@ -100,7 +100,8 @@ function invokeAnthropicForJob(pdfExtract, jobTitle, jobDescription) {
       phone:String,
       gender:String 
       degree:String,
-      year:String
+      year:String,
+      intrest:["technology1","technology2"],
     }
   `;
         const completion = yield anthropic.messages.create({
