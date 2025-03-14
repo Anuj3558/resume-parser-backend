@@ -25,11 +25,8 @@ const PORT = 4000;
 exports.inputDir = path_1.default.join(__dirname, "input");
 exports.outputDir = path_1.default.join(__dirname, "output");
 (0, db_1.connectToDatabase)();
-app.use((0, cors_1.default)());
 app.use((0, cors_1.default)({
-    origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
-    methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: "*",
 }));
 // Middleware
 app.use(express_1.default.static("views"));

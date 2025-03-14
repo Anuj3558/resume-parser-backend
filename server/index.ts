@@ -23,14 +23,12 @@ export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
 connectToDatabase()
-app.use(cors())
 app.use(
 	cors({
-		origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
-		methods: ["GET", "POST", "DELETE"],
-		allowedHeaders: ["Content-Type", "Authorization"],
+	  origin: "*",
 	})
-)
+  );
+  
 // Middleware
 app.use(express.static("views"))
 app.use("/input", express.static(inputDir))
