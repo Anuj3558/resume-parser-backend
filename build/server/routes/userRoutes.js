@@ -35,6 +35,7 @@ router.get("/getUsers", (req, res) => __awaiter(void 0, void 0, void 0, function
 router.post("/addUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, status } = req.body;
+        console.log(req.body);
         let { password } = req.body;
         const category = "USER";
         if (!name || !email || !status || !password) {

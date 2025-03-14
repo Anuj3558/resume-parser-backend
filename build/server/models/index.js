@@ -39,7 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const path_1 = __importDefault(require("path"));
-const inputDir = path_1.default.join(__dirname, '..', '..', 'input');
+const inputDir = path_1.default.join(__dirname, "..", "..", "input");
 const JobCategorySchema = new mongoose_1.default.Schema({
     id: { type: mongoose_1.default.Schema.Types.ObjectId, auto: true }, // Auto-generated unique ID
     name: { type: String, required: true, unique: true },
@@ -76,14 +76,14 @@ const userSchema = new mongoose_1.Schema({
     status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
 });
 const resumeAnalysedSchema = new mongoose_1.Schema({
-    resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Resume', required: true },
-    jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Job', required: true },
+    resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Resume", required: true },
+    jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Job", required: true },
     candidateName: { type: String, required: true },
     education: { type: String, required: true },
     skills: { type: String, required: true },
     summary: { type: String, required: true },
     result: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
 });
 const User = mongoose_1.default.model("User", userSchema);
 exports.User = User;
@@ -91,5 +91,5 @@ const JobCategory = mongoose_1.default.model("JobCategory", JobCategorySchema);
 exports.JobCategory = JobCategory;
 const Job = mongoose_1.default.model("Job", JobSchema); // Corrected model name
 exports.Job = Job;
-const ResumeAnalysed = mongoose_1.default.model('ResumeAnalysed', resumeAnalysedSchema);
+const ResumeAnalysed = mongoose_1.default.model("ResumeAnalysed", resumeAnalysedSchema);
 exports.ResumeAnalysed = ResumeAnalysed;

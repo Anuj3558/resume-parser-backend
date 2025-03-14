@@ -20,14 +20,14 @@ const pdf_extract_1 = require("../../pdf-extract");
 const anthropic_1 = require("../../anthropic");
 const models_1 = require("../models");
 const Analyzerouter = express_1.default.Router();
-const inputDir = path_1.default.join(__dirname, '../../input');
-Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const inputDir = path_1.default.join(__dirname, "../../input");
+Analyzerouter.post("/:jobId/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
         // Check if jobId is a valid MongoDB ObjectId
         if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ message: 'Invalid job ID.' });
+            res.status(400).json({ message: "Invalid job ID." });
             return;
         }
         // Convert jobId string to MongoDB ObjectId
@@ -35,28 +35,32 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
         // Find the job by its ObjectId
         const jobVal = yield models_1.Job.findOne({ _id: jobObjectId });
         if (!jobVal) {
-            res.status(404).json({ message: 'Job not found.' });
+            res.status(404).json({ message: "Job not found." });
             return;
         }
-        const sanitizedJobTitle = jobVal.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const sanitizedJobTitle = jobVal.title
+            .replace(/[^a-zA-Z0-9]/g, "_")
+            .toLowerCase();
         // Construct the directory path
         const jobDir = path_1.default.join(inputDir, userId, sanitizedJobTitle);
         console.log(jobDir);
         // Check if the directory exists
         if (!fs_1.default.existsSync(jobDir)) {
-            res.status(404).json({ message: 'Job directory not found.' });
+            res.status(404).json({ message: "Job directory not found." });
             return;
         }
         // Read all resume files in the directory
-        const resumeFiles = fs_1.default.readdirSync(jobDir).filter(file => file.endsWith('.pdf'));
+        const resumeFiles = fs_1.default
+            .readdirSync(jobDir)
+            .filter((file) => file.endsWith(".pdf"));
         if (resumeFiles.length === 0) {
-            res.status(400).json({ message: 'No resumes found in the directory.' });
+            res.status(400).json({ message: "No resumes found in the directory." });
             return;
         }
         // Fetch the job details from the database
         const job = yield models_1.Job.findOne({ _id: jobObjectId, initiator: userId });
         if (!job) {
-            res.status(404).json({ message: 'Job not found.' });
+            res.status(404).json({ message: "Job not found." });
             return;
         }
         // Process each resume
@@ -72,11 +76,11 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             const resumeAnalysed = new models_1.ResumeAnalysed({
                 resumeId: new mongoose_1.default.Types.ObjectId(), // Generate a new ID for the resume
                 jobId: job._id,
-                candidateName: evaluation.response.name || 'Unknown',
-                education: evaluation.response.college || 'Unknown',
-                skills: evaluation.response.skills || 'Unknown',
-                summary: evaluation.response.summary || 'No summary available',
-                result: evaluation.response.result || 'Fail',
+                candidateName: evaluation.response.name || "Unknown",
+                education: evaluation.response.college || "Unknown",
+                skills: evaluation.response.skills || "Unknown",
+                summary: evaluation.response.summary || "No summary available",
+                result: evaluation.response.result || "Fail",
                 timestamp: new Date(),
             });
             yield resumeAnalysed.save();
@@ -88,11 +92,17 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             });
             yield job.save();
         }
-        res.status(200).json({ message: 'Resumes processed successfully.', jobId: job._id });
+        res.status(200).json({
+            message: "Resumes processed successfully.",
+            jobId: job._id,
+        });
     }
     catch (error) {
         console.error("Error processing resumes:", error);
-        res.status(500).json({ message: 'Failed to process resumes.', error: error.message });
+        res.status(500).json({
+            message: "Failed to process resumes.",
+            error: error.message,
+        });
     }
 }));
 exports.default = Analyzerouter;

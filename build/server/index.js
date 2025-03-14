@@ -16,10 +16,10 @@ dotenv_1.default.config();
 const authRoutes_1 = __importDefault(require("./auth/authRoutes"));
 const jobRoutes_1 = __importDefault(require("./routes/jobRoutes"));
 const db_1 = require("./utils/db");
-const AdminAnalyticsRoute_1 = __importDefault(require("./routes/AdminAnalyticsRoute"));
 const recruiterRoutes_1 = __importDefault(require("./routes/recruiterRoutes"));
 const resultRoutes_1 = __importDefault(require("./routes/resultRoutes"));
 const resultRoutes_2 = __importDefault(require("./routes/resultRoutes"));
+const AnalyticsRoute_1 = __importDefault(require("./routes/AnalyticsRoute"));
 const app = (0, express_1.default)();
 const PORT = 4000;
 exports.inputDir = path_1.default.join(__dirname, "input");
@@ -40,7 +40,7 @@ app.use((0, cors_1.default)({
 }));
 // Routes
 app.use("/auth", authRoutes_1.default);
-app.use("/api", AdminAnalyticsRoute_1.default);
+app.use("/api", AnalyticsRoute_1.default);
 // Protected routes
 app.use("/resumes", resultRoutes_1.default);
 app.use("/upload-resume", fileRoutes_1.default);

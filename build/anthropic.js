@@ -56,9 +56,7 @@ function invokeAnthropic(pdfExtract) {
             messages: [{ role: "user", content: prompt }],
             temperature: 0.0,
         });
-        const response = completion.content[0].type === 'text'
-            ? completion.content[0].text
-            : '';
+        const response = completion.content[0].type === "text" ? completion.content[0].text : "";
         return { response: JSON.parse(response), tokens: completion.usage };
     });
 }

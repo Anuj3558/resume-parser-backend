@@ -1,40 +1,40 @@
-import { Anthropic } from '@anthropic-ai/sdk';
-import { Usage } from '@anthropic-ai/sdk/resources/messages';
-import xlsx from "xlsx";
+import {Anthropic} from "@anthropic-ai/sdk"
+import {Usage} from "@anthropic-ai/sdk/resources/messages"
+import xlsx from "xlsx"
 export type JobEvaluation = {
-  response: any; // Dynamic response based on the job prompt
-  tokens: {
-    input_tokens: number;
-    output_tokens: number;
-  };
-};
+	response: any // Dynamic response based on the job prompt
+	tokens: {
+		input_tokens: number
+		output_tokens: number
+	}
+}
 export type ResumeEvaluation = {
-  response: {
-    name: string;
-    result: string;
-    college: string;
-    city: string;
-    phone: string;
-    gender: string;
-    degree: string;
-    year: string;
-    gpa: string;
-    interest1: string;
-    interest2: string;
-    interest3: string;
-    summary: string;
-    points: {
-      collegeReputation: number;
-      degree: number;
-      gpa: number;
-      projects: number;
-      bonus: number;
-    }
-  },
-  tokens: {
-    input_tokens: number;
-    output_tokens: number;
-  }
+	response: {
+		name: string
+		result: string
+		college: string
+		city: string
+		phone: string
+		gender: string
+		degree: string
+		year: string
+		gpa: string
+		interest1: string
+		interest2: string
+		interest3: string
+		summary: string
+		points: {
+			collegeReputation: number
+			degree: number
+			gpa: number
+			projects: number
+			bonus: number
+		}
+	}
+	tokens: {
+		input_tokens: number
+		output_tokens: number
+	}
 }
 
 const PROMPT = `
@@ -67,46 +67,49 @@ const PROMPT = `
 `
 
 export async function invokeAnthropic(pdfExtract: string): Promise<ResumeEvaluation> {
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
+	const anthropic = new Anthropic({
+		apiKey: process.env.ANTHROPIC_API_KEY,
+	})
 
-  const prompt = PROMPT.replace("{pdfExtract}", pdfExtract); 
+	const prompt = PROMPT.replace("{pdfExtract}", pdfExtract)
 
-  const completion = await anthropic.messages.create({
-    model: "claude-3-5-sonnet-20240620",
-    max_tokens: 4096,
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.0,
-  });
+	const completion = await anthropic.messages.create({
+		model: "claude-3-5-sonnet-20240620",
+		max_tokens: 4096,
+		messages: [{role: "user", content: prompt}],
+		temperature: 0.0,
+	})
 
-  const response = completion.content[0].type === 'text' 
-  ? completion.content[0].text 
-  : '';
+	const response =
+		completion.content[0].type === "text" ? completion.content[0].text : ""
 
-  return { response: JSON.parse(response), tokens: completion.usage };
+	return {response: JSON.parse(response), tokens: completion.usage}
 }
 
 function getPromptFromExcel(jobPosition: string): string | null {
-  const workbook = xlsx.readFile("./Prompts.xlsx");
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const data = xlsx.utils.sheet_to_json<{ "Job Position": string; Prompt: string }>(sheet);
+	const workbook = xlsx.readFile("./Prompts.xlsx")
+	const sheet = workbook.Sheets[workbook.SheetNames[0]]
+	const data = xlsx.utils.sheet_to_json<{"Job Position": string; Prompt: string}>(
+		sheet
+	)
 
-  const entry = data.find((row) => row["Job Position"].toLowerCase() === jobPosition.toLowerCase());
-  return entry ? entry.Prompt : null;
+	const entry = data.find(
+		(row) => row["Job Position"].toLowerCase() === jobPosition.toLowerCase()
+	)
+	return entry ? entry.Prompt : null
 }
 
 export async function invokeAnthropicForJob(
-  pdfExtract: string,
-  jobTitle: string,
-  jobDescription: string
+	pdfExtract: string,
+	jobTitle: string,
+	jobDescription: string
 ): Promise<JobEvaluation> {
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
+	const anthropic = new Anthropic({
+		apiKey: process.env.ANTHROPIC_API_KEY,
+	})
 
-  // Construct the prompt dynamically using job title, job description, and PDF text
-  const prompt = `
+	// Construct the prompt dynamically using job title, job description, and PDF text
+	const prompt = `
     Job Title: ${jobTitle}
     Job Description: ${jobDescription}
 
@@ -143,17 +146,17 @@ export async function invokeAnthropicForJob(
         bonus: number
       }
     }
-  `;
+  `
 
-  const completion = await anthropic.messages.create({
-    model: "claude-3-5-sonnet-20240620",
-    max_tokens: 4096,
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.0,
-  });
+	const completion = await anthropic.messages.create({
+		model: "claude-3-5-sonnet-20240620",
+		max_tokens: 4096,
+		messages: [{role: "user", content: prompt}],
+		temperature: 0.0,
+	})
 
-  const response =
-    completion.content[0].type === "text" ? completion.content[0].text : "";
+	const response =
+		completion.content[0].type === "text" ? completion.content[0].text : ""
 
-  return { response: JSON.parse(response), tokens: completion.usage };
+	return {response: JSON.parse(response), tokens: completion.usage}
 }
