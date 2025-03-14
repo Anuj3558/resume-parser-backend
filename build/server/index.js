@@ -25,6 +25,9 @@ const PORT = 4000;
 exports.inputDir = path_1.default.join(__dirname, "input");
 exports.outputDir = path_1.default.join(__dirname, "output");
 (0, db_1.connectToDatabase)();
+app.use((0, cors_1.default)({
+    origin: "*",
+}));
 // Middleware
 app.use(express_1.default.static("views"));
 app.use("/input", express_1.default.static(exports.inputDir));
@@ -32,13 +35,7 @@ app.use("/output", express_1.default.static(exports.outputDir));
 app.use((0, express_fileupload_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-app.use((0, cors_1.default)());
-app.use((0, cors_1.default)({
-    origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
-    methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-}));
-// Routes
+// Route
 app.use("/auth", authRoutes_1.default);
 app.use("/api", AdminAnalyticsRoute_1.default);
 // Protected routes

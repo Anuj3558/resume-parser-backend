@@ -125,23 +125,8 @@ export async function invokeAnthropicForJob(
       name: string,
       result: "Success" | "Fail",
       college: string,
-      city: string,
-      phone: string,
-      gender: "Male" | "Female" | "Unknown",
-      degree: string,
-      year: string,
-      gpa: string,
-      interest1: string,
-      interest2: string,
-      interest3: string,
+      matchingScore: number(0-100),
       summary: string,
-      points: {
-        collegeReputation: number,
-        degree: number,
-        gpa: number,
-        projects: number,
-        bonus: number
-      }
     }
   `;
 

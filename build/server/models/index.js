@@ -79,10 +79,9 @@ const resumeAnalysedSchema = new mongoose_1.Schema({
     resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Resume', required: true },
     jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Job', required: true },
     candidateName: { type: String, required: true },
-    education: { type: String, required: true },
-    skills: { type: String, required: true },
     summary: { type: String, required: true },
     result: { type: String, required: true },
+    matchingscore: { type: Number, required: true },
     timestamp: { type: Date, default: Date.now }
 });
 const User = mongoose_1.default.model("User", userSchema);

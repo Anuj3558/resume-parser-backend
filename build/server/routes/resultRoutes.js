@@ -22,10 +22,10 @@ const models_1 = require("../models");
 const Analyzerouter = express_1.default.Router();
 const inputDir = path_1.default.join(__dirname, '../../input');
 Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
-        console.log("job id->", jobId);
         // Check if jobId is a valid MongoDB ObjectId
         // if (!mongoose.Types.ObjectId.isValid(jobId)) {
         //     res.status(400).json({ message: 'Invalid job ID.' });
@@ -42,7 +42,6 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
         const sanitizedJobTitle = jobVal.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         // Construct the directory path
         const jobDir = path_1.default.join(inputDir, userId, sanitizedJobTitle);
-        console.log(jobDir);
         // Check if the directory exists
         if (!fs_1.default.existsSync(jobDir)) {
             res.status(404).json({ message: 'Job directory not found.' });
@@ -55,7 +54,7 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             return;
         }
         // Fetch the job details from the database
-        const job = yield models_1.Job.findOne({ _id: jobObjectId, initiator: userId });
+        const job = yield models_1.Job.findOne({ _id: jobObjectId });
         if (!job) {
             res.status(404).json({ message: 'Job not found.' });
             return;
@@ -65,17 +64,14 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             const resumePath = path_1.default.join(jobDir, resumeFile);
             // Extract text from the resume
             const resumeText = yield (0, pdf_extract_1.extractTextFromPdf)(resumePath);
-            console.log(resumeText);
             // Send the text to Anthropic for evaluation
             const evaluation = yield (0, anthropic_1.invokeAnthropicForJob)(resumeText, job.description, job.requirements);
-            console.log(evaluation);
             // Save the evaluation result in the ResumeAnalysed schema
             const resumeAnalysed = new models_1.ResumeAnalysed({
                 resumeId: new mongoose_1.default.Types.ObjectId(), // Generate a new ID for the resume
                 jobId: job._id,
                 candidateName: evaluation.response.name || 'Unknown',
-                education: evaluation.response.college || 'Unknown',
-                skills: evaluation.response.skills || 'Unknown',
+                matchingscore: ((_a = evaluation === null || evaluation === void 0 ? void 0 : evaluation.response) === null || _a === void 0 ? void 0 : _a.matchingscore) || 0,
                 summary: evaluation.response.summary || 'No summary available',
                 result: evaluation.response.result || 'Fail',
                 timestamp: new Date(),
