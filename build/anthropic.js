@@ -96,6 +96,11 @@ function invokeAnthropicForJob(pdfExtract, jobTitle, jobDescription) {
       college: string,
       matchingScore: number(0-100),
       summary: string,
+      city:String,
+      phone:String,
+      gender:String 
+      degree:String,
+      year:String
     }
   `;
         const completion = yield anthropic.messages.create({

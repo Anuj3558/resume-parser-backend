@@ -75,6 +75,12 @@ Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> 
                 matchingscore: evaluation?.response?.matchingscore || 0,
                 summary: evaluation.response.summary || 'No summary available',
                 result: evaluation.response.result || 'Fail',
+                city:evaluation.response.city ||"Na",
+                phone:evaluation.response.phone || "Na",
+                gender : evaluation.response.gender || "Na",
+                degree:evaluation.response.degree || "Na",
+                year:evaluation.response.year || "Na",
+                interest:evaluation.response.interest || "Na",
                 timestamp: new Date(),
             });
 

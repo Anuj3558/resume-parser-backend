@@ -127,6 +127,12 @@ export async function invokeAnthropicForJob(
       college: string,
       matchingScore: number(0-100),
       summary: string,
+      city:String,
+      phone:String,
+      gender:String 
+      degree:String,
+      year:String,
+      intrest:["technology1","technology2"],
     }
   `;
 
