@@ -34,10 +34,11 @@ const insertDemoCredentials = async () => {
         password: hashedPassword,
         email: demoUser.email,
         role: demoUser.role,
+        category:demoUser.category,
         status: demoUser.status
       });
 
-      console.log('Demo credentials inserted successfully.');
+      console.log('Demo credentials inserte successfully.');
     } else {
       console.log('Demo user already exists.');
     }

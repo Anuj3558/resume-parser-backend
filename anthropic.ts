@@ -128,23 +128,14 @@ export async function invokeAnthropicForJob(
       name: string,
       result: "Success" | "Fail",
       college: string,
-      city: string,
-      phone: string,
-      gender: "Male" | "Female" | "Unknown",
-      degree: string,
-      year: string,
-      gpa: string,
-      interest1: string,
-      interest2: string,
-      interest3: string,
+      matchingScore: number(0-100),
       summary: string,
-      points: {
-        collegeReputation: number,
-        degree: number,
-        gpa: number,
-        projects: number,
-        bonus: number
-      }
+      city:String,
+      phone:String,
+      gender:String 
+      degree:String,
+      year:String,
+      intrest:["technology1","technology2"],
     }
   `
 
@@ -155,8 +146,8 @@ export async function invokeAnthropicForJob(
 		temperature: 0.0,
 	})
 
-	const response =
-		completion.content[0].type === "text" ? completion.content[0].text : ""
-
-	return {response: JSON.parse(response), tokens: completion.usage}
+  const response =
+    completion.content[0].type === "text" ? completion.content[0].text : "";
+  console.log("Ai responded with -> ", response)
+  return { response: JSON.parse(response), tokens: completion.usage };
 }

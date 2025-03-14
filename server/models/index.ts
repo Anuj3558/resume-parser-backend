@@ -44,19 +44,51 @@ const userSchema = new Schema({
 })
 
 const resumeAnalysedSchema = new Schema({
-	resumeId: {type: Schema.Types.ObjectId, ref: "Resume", required: true},
-	jobId: {type: Schema.Types.ObjectId, ref: "Job", required: true},
-	candidateName: {type: String, required: true},
-	education: {type: String, required: true},
-	skills: {type: String, required: true},
-	summary: {type: String, required: true},
-	result: {type: String, required: true},
-	timestamp: {type: Date, default: Date.now},
+    resumeId: { type: Schema.Types.ObjectId, ref: 'Resume', required: true },
+    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
+    candidateName: { type: String, required: true },
+    summary: { type: String, required: true },
+    result: { type: String, required: true },
+    matchingscore: { type: Number, required: true },
+    college: {
+        type: String,
+        required: true,
+      },
+      phone: {
+        type: String,
+        required: true,
+      },
+      gender: {
+        type: String,
+        required: true,
+      },
+      year: {
+        type: String,
+        required: true,
+      },
+      interest: {
+        type: [String],
+        required: true,
+      },
+    timestamp: { type: Date, default: Date.now }
+});
+
+
+const resumeSchema = new Schema({
+    filePath: { type: String, required: true },
+    processed: {type: String, Enum: ["Y", "N"], required: true },
+    name: { type: String },
+    
+    timestamp: { type: Date, default: Date.now },
+    user: { type: Schema.Types.ObjectId, ref: "User" },
+    job: { type: Schema.Types.ObjectId, ref: "Job" },
+    analysis: [{ type: Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
 })
 
-const User = mongoose.model("User", userSchema)
-const JobCategory = mongoose.model("JobCategory", JobCategorySchema)
-const Job = mongoose.model("Job", JobSchema) // Corrected model name
-const ResumeAnalysed = mongoose.model("ResumeAnalysed", resumeAnalysedSchema)
+const User = mongoose.model("User", userSchema);
+const JobCategory = mongoose.model("JobCategory", JobCategorySchema);
+const Job = mongoose.model("Job", JobSchema); // Corrected model name
+const ResumeAnalysed = mongoose.model('ResumeAnalysed', resumeAnalysedSchema);
+const Resume = mongoose.model("Resume", resumeSchema)
 
-export {Job, JobCategory, User, ResumeAnalysed}
+export { Job, JobCategory, User, ResumeAnalysed, Resume };

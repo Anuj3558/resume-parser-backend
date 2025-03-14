@@ -23,7 +23,12 @@ export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
 connectToDatabase()
-
+app.use(
+	cors({
+	  origin: "*",
+	})
+  );
+  
 // Middleware
 app.use(express.static("views"))
 app.use("/input", express.static(inputDir))
@@ -32,16 +37,9 @@ app.use(fileUpload())
 app.use(express.json())
 
 app.use(express.urlencoded({extended: true}))
-app.use(cors())
-app.use(
-	cors({
-		origin: ["https://resume-parser-lovat-two.vercel.app", "http://localhost:3000"],
-		methods: ["GET", "POST", "DELETE"],
-		allowedHeaders: ["Content-Type", "Authorization"],
-	})
-)
 
-// Routes
+
+// Route
 app.use("/auth", authRoutes)
 app.use("/api", AnalyticsRouter)
 // Protected routes
@@ -54,6 +52,7 @@ app.use("/recruiter", recruiterRoutes)
 
 app.get("/", (req: Request, res: Response) => {
 	//res.sendFile(path.join(__dirname, "views", "index.html"))
+	res.json({message: "Hellow world"})
 })
 
 app.post("/config/update", (req: any, res: any) => {
@@ -80,6 +79,6 @@ app.post("/config/update", (req: any, res: any) => {
 	res.send(`<div class="text-green-400">Directories updated successfully!</div>`)
 })
 
-app.listen(PORT, () => {
-	console.log(`Server running on http://localhost:${PORT}`)
-})
+app.listen(PORT, "0.0.0.0", () => {
+	console.log(`Server running on http://0.0.0.0:${PORT}`);
+  });

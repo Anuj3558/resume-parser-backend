@@ -16,12 +16,13 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const models_1 = require("../models");
+const mongoose_1 = __importDefault(require("mongoose"));
 const router = express_1.default.Router();
 router.get("/getAssignedJobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("getJobs");
         const { id } = req.params;
-        const jobs = yield models_1.Job.find({ assigned: { $in: [id] }, initiator: id });
+        const jobs = yield models_1.Job.find({ assigned: { $in: [id] } });
         console.log(jobs);
         res.status(200).json(jobs);
     }
@@ -33,11 +34,16 @@ router.get("/getAllJobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, fu
     try {
         console.log("getJobs");
         const { id } = req.params;
-        const jobs = yield models_1.Job.find({ initiator: id });
+        const objectId = new mongoose_1.default.Types.ObjectId(id);
+        console.log(id, objectId);
+        const jobs = yield models_1.Job.find({
+            $or: [{ assigned: { $in: [objectId] } }, { initiator: objectId }]
+        });
         console.log(jobs);
         res.status(200).json(jobs);
     }
     catch (error) {
+        console.log(error);
         res.status(500).json({ message: "Server error", error });
     }
 }));

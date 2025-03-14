@@ -23,80 +23,56 @@ const inputDir = path_1.default.join(__dirname, '../../input');
 if (!fs_1.default.existsSync(inputDir)) {
     fs_1.default.mkdirSync(inputDir);
 }
-// Handle resume upload for a specific job and user
 router.post('/:jobId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Check if files were uploaded
         if (!req.files || !req.files.resume) {
             return res.status(400).json({ error: 'No resume files were uploaded.' });
         }
-        // Get job ID from params
         const { jobId } = req.params;
-        console.log(jobId);
-        // Validate jobId
         if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
             return res.status(400).json({ error: 'Invalid job ID format.' });
         }
-        // Get user ID from request (assuming user is authenticated)
         const userId = req.body.userId;
         if (!userId) {
             return res.status(401).json({ error: 'Authentication required.' });
         }
-        // Fetch job and user information
         const job = yield index_1.Job.findById(jobId);
         const user = yield index_1.User.findById(userId);
-        if (!job) {
-            return res.status(404).json({ error: 'Job not found.' });
+        if (!job || !user) {
+            return res.status(404).json({ error: 'Job or user not found.' });
         }
-        if (!user) {
-            return res.status(404).json({ error: 'User not found.' });
-        }
-        // Create directory structure: input/userId/jobTitle/
         const userDir = path_1.default.join(inputDir, userId.toString());
-        if (!fs_1.default.existsSync(userDir)) {
+        if (!fs_1.default.existsSync(userDir))
             fs_1.default.mkdirSync(userDir);
-        }
-        // Sanitize job title for directory name (remove special chars and spaces)
         const sanitizedJobTitle = job.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         const jobDir = path_1.default.join(userDir, sanitizedJobTitle);
-        if (!fs_1.default.existsSync(jobDir)) {
+        if (!fs_1.default.existsSync(jobDir))
             fs_1.default.mkdirSync(jobDir);
-        }
-        // Handle single or multiple resume files
         const files = Array.isArray(req.files.resume) ? req.files.resume : [req.files.resume];
         const uploadPromises = files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
-            // Generate unique filename to prevent overwriting
             const timestamp = new Date().getTime();
             const fileExtension = path_1.default.extname(file.name);
             const fileName = `${path_1.default.basename(file.name, fileExtension)}_${timestamp}${fileExtension}`;
-            // Check if file is a PDF
             if (fileExtension.toLowerCase() !== '.pdf') {
                 throw new Error(`File ${file.name} is not a PDF.`);
             }
             const filePath = path_1.default.join(jobDir, fileName);
-            const relativePath = path_1.default.relative(inputDir, filePath);
-            // Move file to destination
             yield file.mv(filePath);
-            // Return resume info
-            return {
+            const resumeRecord = new index_1.Resume({
+                filePath: `/input/${userId}/${sanitizedJobTitle}/${fileName}`,
+                processed: 'N',
                 name: fileName,
-                filePath: `/input/${relativePath}`,
-                evaluation: null // Evaluation will be added later
-            };
+                user: userId,
+                job: jobId,
+            });
+            yield resumeRecord.save();
+            return resumeRecord;
         }));
-        // Wait for all files to be processed
         const uploadedResumes = yield Promise.all(uploadPromises);
-        // Update job with resume information
-        const updatedJob = yield index_1.Job.findByIdAndUpdate(jobId, {
-            $push: {
-                resumes: { $each: uploadedResumes }
-            },
-            $inc: { resumeMatches: uploadedResumes.length }
-        }, { new: true });
         res.json({
             success: true,
             message: `${uploadedResumes.length} resume(s) uploaded successfully`,
-            job: updatedJob
+            resumes: uploadedResumes
         });
     }
     catch (error) {

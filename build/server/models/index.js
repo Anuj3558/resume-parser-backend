@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
+exports.Resume = exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const path_1 = __importDefault(require("path"));
 const inputDir = path_1.default.join(__dirname, "..", "..", "input");
@@ -76,14 +76,42 @@ const userSchema = new mongoose_1.Schema({
     status: { type: String, Enum: ["ACTIVE", "INACTIVE"], required: true },
 });
 const resumeAnalysedSchema = new mongoose_1.Schema({
-    resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Resume", required: true },
-    jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Job", required: true },
+    resumeId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Resume', required: true },
+    jobId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Job', required: true },
     candidateName: { type: String, required: true },
-    education: { type: String, required: true },
-    skills: { type: String, required: true },
     summary: { type: String, required: true },
     result: { type: String, required: true },
+    matchingscore: { type: Number, required: true },
+    college: {
+        type: String,
+        required: true,
+    },
+    phone: {
+        type: String,
+        required: true,
+    },
+    gender: {
+        type: String,
+        required: true,
+    },
+    year: {
+        type: String,
+        required: true,
+    },
+    interest: {
+        type: [String],
+        required: true,
+    },
+    timestamp: { type: Date, default: Date.now }
+});
+const resumeSchema = new mongoose_1.Schema({
+    filePath: { type: String, required: true },
+    processed: { type: String, Enum: ["Y", "N"], required: true },
+    name: { type: String },
     timestamp: { type: Date, default: Date.now },
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
+    job: { type: mongoose_1.Schema.Types.ObjectId, ref: "Job" },
+    analysis: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
 });
 const User = mongoose_1.default.model("User", userSchema);
 exports.User = User;
@@ -91,5 +119,7 @@ const JobCategory = mongoose_1.default.model("JobCategory", JobCategorySchema);
 exports.JobCategory = JobCategory;
 const Job = mongoose_1.default.model("Job", JobSchema); // Corrected model name
 exports.Job = Job;
-const ResumeAnalysed = mongoose_1.default.model("ResumeAnalysed", resumeAnalysedSchema);
+const ResumeAnalysed = mongoose_1.default.model('ResumeAnalysed', resumeAnalysedSchema);
 exports.ResumeAnalysed = ResumeAnalysed;
+const Resume = mongoose_1.default.model("Resume", resumeSchema);
+exports.Resume = Resume;
