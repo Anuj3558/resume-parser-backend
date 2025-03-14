@@ -77,6 +77,7 @@ Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> 
                 result: evaluation.response.result || 'Fail',
                 city:evaluation.response.city ||"Na",
                 phone:evaluation.response.phone || "Na",
+                college:evaluation.response.college || "Na",
                 gender : evaluation.response.gender || "Na",
                 degree:evaluation.response.degree || "Na",
                 year:evaluation.response.year || "Na",

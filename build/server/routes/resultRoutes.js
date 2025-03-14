@@ -76,6 +76,7 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
                 result: evaluation.response.result || 'Fail',
                 city: evaluation.response.city || "Na",
                 phone: evaluation.response.phone || "Na",
+                college: evaluation.response.college || "Na",
                 gender: evaluation.response.gender || "Na",
                 degree: evaluation.response.degree || "Na",
                 year: evaluation.response.year || "Na",
