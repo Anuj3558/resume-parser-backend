@@ -119,11 +119,12 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
+        console.log("job id->", jobId);
         // Check if jobId is a valid MongoDB ObjectId
-        if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ message: 'Invalid job ID.' });
-            return;
-        }
+        // if (!mongoose.Types.ObjectId.isValid(jobId)) {
+        //     res.status(400).json({ message: 'Invalid job ID.' });
+        //     return;
+        // }
         // Convert jobId string to MongoDB ObjectId
         const jobObjectId = new mongoose_1.default.Types.ObjectId(jobId);
         // Find the job by its ObjectId
@@ -186,6 +187,32 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
     catch (error) {
         console.error("Error processing resumes:", error);
         res.status(500).json({ message: 'Failed to process resumes.', error: error.message });
+    }
+}));
+// Get all analyzed resumes
+Analyzerouter.get("/getAllResumes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const resumes = yield models_1.ResumeAnalysed.find().populate("resumeId").populate("jobId");
+        res.status(200).json(resumes);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+}));
+// Get analyzed resume by ID
+Analyzerouter.get("/getResume/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const resume = yield models_1.ResumeAnalysed.findById(id).populate("resumeId").populate("jobId");
+        if (!resume) {
+            return res.status(404).json({ message: "Resume not found" });
+        }
+        res.status(200).json(resume);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
     }
 }));
 exports.default = Analyzerouter;

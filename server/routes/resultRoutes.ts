@@ -10,121 +10,17 @@ import { Job, ResumeAnalysed } from "../models";
 const Analyzerouter = express.Router();
 const inputDir = path.join(__dirname, '../../input');
 
-Analyzerouter.get('/job/:jobId', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { jobId } = req.params;
 
-        // Validate jobId is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ success: false, message: 'Invalid job ID format' });
-            return;
-        }
-
-        // Convert jobId string to MongoDB ObjectId
-        const jobObjectId = new mongoose.Types.ObjectId(jobId);
-
-        // First check if the job exists
-        const job = await Job.findById(jobObjectId);
-        if (!job) {
-            res.status(404).json({ success: false, message: 'Job not found' });
-            return;
-        }
-
-        // Fetch all analyzed resumes for this job
-        const analyzedResumes = await ResumeAnalysed.find({ jobId: jobObjectId })
-            .sort({ timestamp: -1 }) // Sort by timestamp in descending order (newest first)
-            .select('-__v'); // Exclude the version field
-
-        // If no analyzed resumes found
-        if (!analyzedResumes || analyzedResumes.length === 0) {
-            res.status(200).json({ 
-                success: true, 
-                message: 'No analyzed resumes found for this job', 
-                data: [] 
-            });
-            return;
-        }
-
-        // Map results for client consumption and include shortlisted status
-        const formattedResumes = analyzedResumes.map(resume => {
-            const resultLower = resume.result.toLowerCase();
-            const shortlisted = resultLower.includes('pass') || resultLower.includes('qualified');
-            
-            return {
-                id: resume._id,
-                candidateName: resume.candidateName,
-                summary: resume.summary,
-                result: resume.result,
-                matchingScore: resume.matchingscore, // Helper function to calculate a score
-                timestamp: resume.timestamp,
-                reason: resume.summary, // Helper function to generate a reason
-            };
-        });
-
-        res.status(200).json({
-            success: true,
-            message: 'Analyzed resumes retrieved successfully',
-            data: formattedResumes,
-            count: formattedResumes.length
-        });
-    } catch (error) {
-        console.error("Error fetching analyzed resumes:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch analyzed resumes', 
-            error: (error as Error).message 
-        });
-    }
-});
-
-// Helper function to calculate a matching score based on the resume analysis
-function calculateMatchingScore(resume: any): number {
-    // This is a simplified scoring mechanism - customize based on your needs
-    let score = 0;
-    
-    // Base score from the result
-    const resultLower = resume.result.toLowerCase();
-    if (resultLower.includes('pass') || resultLower.includes('qualified')) {
-        score += 70; // Base score for qualified candidates
-    } else {
-        score += 30; // Base score for non-qualified candidates
-    }
-    
-    // Additional points for various criteria
-    // For example, more skills could mean higher score
-    const skillsCount = resume.skills.split(',').length;
-    score += Math.min(skillsCount * 2, 20); // Up to 20 additional points for skills
-    
-    // Additional points for education if relevant
-    if (resume.education && 
-        !['unknown', 'not specified', 'n/a'].includes(resume.education.toLowerCase())) {
-        score += 10;
-    }
-    
-    // Ensure the score is between 0 and 100
-    return Math.min(Math.max(score, 0), 100);
-}
-
-// Helper function to generate a reason for the shortlisting decision
-function generateReason(resume: any): string {
-    const resultLower = resume.result.toLowerCase();
-    
-    if (resultLower.includes('pass') || resultLower.includes('qualified')) {
-        return `Candidate has relevant skills (${resume.skills}) and satisfies the job requirements.`;
-    } else {
-        return `Candidate's profile doesn't fully match the job requirements or might be missing key skills.`;
-    }
-}
-Analyzerouter.post('/:jobId/:userId', async (req: Request, res: Response): Promise<void> => {
+Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> => {
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
-
+        console.log("job id->", jobId)
         // Check if jobId is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ message: 'Invalid job ID.' });
-            return;
-        }
+        // if (!mongoose.Types.ObjectId.isValid(jobId)) {
+        //     res.status(400).json({ message: 'Invalid job ID.' });
+        //     return;
+        // }
 
         // Convert jobId string to MongoDB ObjectId
         const jobObjectId = new mongoose.Types.ObjectId(jobId);
@@ -200,4 +96,36 @@ Analyzerouter.post('/:jobId/:userId', async (req: Request, res: Response): Promi
         res.status(500).json({ message: 'Failed to process resumes.', error: (error as any).message });
     }
 });
+
+
+
+// Get all analyzed resumes
+Analyzerouter.get("/getAllResumes", async (req: any, res: any) => {
+    try {
+        const resumes = await ResumeAnalysed.find().populate("resumeId").populate("jobId");
+        res.status(200).json(resumes);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+// Get analyzed resume by ID
+Analyzerouter.get("/getResume/:id", async (req: any, res: any) => {
+    try {
+        const { id } = req.params;
+        const resume = await ResumeAnalysed.findById(id).populate("resumeId").populate("jobId");
+
+        if (!resume) {
+            return res.status(404).json({ message: "Resume not found" });
+        }
+
+        res.status(200).json(resume);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+
 export default Analyzerouter;

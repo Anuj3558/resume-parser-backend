@@ -1,7 +1,7 @@
 import express, {Request, Response} from "express"
 
 import {Job, JobCategory} from "../models"
-import {Types} from "mongoose"
+import mongoose, {Types} from "mongoose"
 const jobRouter = express.Router()
 
 /** -----------------------
@@ -93,6 +93,22 @@ jobRouter.get("/jobs", async (req: any, res: any) => {
 		const jobs = await Job.find().populate("assigned", "name email")
 		res.json(jobs)
 	} catch (error) {
+		res.status(500).json({error: "Error fetching jobs"})
+	}
+})
+
+jobRouter.get("/resumeEvals/:jobId", async (req: any, res: any) => {
+	try {
+		// const jobs = await Job.find().populate("userId", "name email");
+		// Check if jobid is valid mongo id
+		const jobId = req.params.jobId;
+		if (!mongoose.Types.ObjectId.isValid(jobId)) {
+			return res.status(404).json({response: [], error:"Invalid job id" })
+		}
+		const jobs = await Job.find({_id: jobId}).select("resumes")
+		res.json(jobs)
+	} catch (error) {
+		console.log(error)
 		res.status(500).json({error: "Error fetching jobs"})
 	}
 })
