@@ -23,15 +23,6 @@ export const inputDir = path.join(__dirname, "input")
 export const outputDir = path.join(__dirname, "output")
 
 connectToDatabase()
-
-// Middleware
-app.use(express.static("views"))
-app.use("/input", express.static(inputDir))
-app.use("/output", express.static(outputDir))
-app.use(fileUpload())
-app.use(express.json())
-
-app.use(express.urlencoded({extended: true}))
 app.use(cors())
 app.use(
 	cors({
@@ -40,6 +31,15 @@ app.use(
 		allowedHeaders: ["Content-Type", "Authorization"],
 	})
 )
+// Middleware
+app.use(express.static("views"))
+app.use("/input", express.static(inputDir))
+app.use("/output", express.static(outputDir))
+app.use(fileUpload())
+app.use(express.json())
+
+app.use(express.urlencoded({extended: true}))
+
 
 // Route
 app.use("/auth", authRoutes)
