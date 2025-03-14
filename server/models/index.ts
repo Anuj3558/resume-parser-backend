@@ -76,8 +76,9 @@ const resumeAnalysedSchema = new Schema({
 
 const resumeSchema = new Schema({
     filePath: { type: String, required: true },
-    procesed: {type: String, Enum: ["Y", "N"], required: true },
+    processed: {type: String, Enum: ["Y", "N"], required: true },
     name: { type: String },
+    
     timestamp: { type: Date, default: Date.now },
     user: { type: Schema.Types.ObjectId, ref: "User" },
     job: { type: Schema.Types.ObjectId, ref: "Job" },
@@ -88,6 +89,6 @@ const User = mongoose.model("User", userSchema);
 const JobCategory = mongoose.model("JobCategory", JobCategorySchema);
 const Job = mongoose.model("Job", JobSchema); // Corrected model name
 const ResumeAnalysed = mongoose.model('ResumeAnalysed', resumeAnalysedSchema);
+const Resume = mongoose.model("Resume", resumeSchema)
 
-
-export { Job, JobCategory, User, ResumeAnalysed };
+export { Job, JobCategory, User, ResumeAnalysed, Resume };

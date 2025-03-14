@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
 const express_1 = __importDefault(require("express"));
 const pdf_extract_1 = require("../../pdf-extract");
 const anthropic_1 = require("../../anthropic");
@@ -24,79 +23,60 @@ const inputDir = path_1.default.join(__dirname, '../../input');
 Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const userId = req.params.userId;
-        const jobId = req.params.jobId;
-        // Check if jobId is a valid MongoDB ObjectId
-        // if (!mongoose.Types.ObjectId.isValid(jobId)) {
-        //     res.status(400).json({ message: 'Invalid job ID.' });
-        //     return;
-        // }
-        // Convert jobId string to MongoDB ObjectId
-        const jobObjectId = new mongoose_1.default.Types.ObjectId(jobId);
-        // Find the job by its ObjectId
-        const jobVal = yield models_1.Job.findOne({ _id: jobObjectId });
-        if (!jobVal) {
-            res.status(404).json({ message: 'Job not found.' });
-            return;
+        const { jobId, userId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({ error: 'Invalid job ID format.' });
         }
-        const sanitizedJobTitle = jobVal.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        // Construct the directory path
-        const jobDir = path_1.default.join(inputDir, userId, sanitizedJobTitle);
-        // Check if the directory exists
-        if (!fs_1.default.existsSync(jobDir)) {
-            res.status(404).json({ message: 'Job directory not found.' });
-            return;
-        }
-        // Read all resume files in the directory
-        const resumeFiles = fs_1.default.readdirSync(jobDir).filter(file => file.endsWith('.pdf'));
-        if (resumeFiles.length === 0) {
-            res.status(400).json({ message: 'No resumes found in the directory.' });
-            return;
-        }
-        // Fetch the job details from the database
-        const job = yield models_1.Job.findOne({ _id: jobObjectId });
+        const job = yield models_1.Job.findById(jobId);
         if (!job) {
-            res.status(404).json({ message: 'Job not found.' });
-            return;
+            return res.status(404).json({ error: 'Job not found.' });
         }
-        //Final Backend commit
-        // Process each resume
-        for (const resumeFile of resumeFiles) {
-            const resumePath = path_1.default.join(jobDir, resumeFile);
-            // Extract text from the resume
+        const resumes = yield models_1.Resume.find({ job: jobId, user: userId, processed: 'N' });
+        if (resumes.length === 0) {
+            return res.status(400).json({ error: 'No unprocessed resumes found.' });
+        }
+        const analysisResults = [];
+        for (const resume of resumes) {
+            console.log("Processing - ", resume.filePath);
+            const resumePath = path_1.default.join(inputDir, resume.filePath.replace('/input/', ''));
             const resumeText = yield (0, pdf_extract_1.extractTextFromPdf)(resumePath);
-            // Send the text to Anthropic for evaluation
             const evaluation = yield (0, anthropic_1.invokeAnthropicForJob)(resumeText, job.description, job.requirements);
-            // Save the evaluation result in the ResumeAnalysed schema
-            const resumeAnalysed = new models_1.ResumeAnalysed({
-                resumeId: new mongoose_1.default.Types.ObjectId(), // Generate a new ID for the resume
+            console.log("Ai responded with ->", evaluation);
+            const resumeAnalysis = new models_1.ResumeAnalysed({
+                resumeId: resume._id,
                 jobId: job._id,
                 candidateName: evaluation.response.name || 'Unknown',
                 matchingscore: ((_a = evaluation === null || evaluation === void 0 ? void 0 : evaluation.response) === null || _a === void 0 ? void 0 : _a.matchingscore) || 0,
                 summary: evaluation.response.summary || 'No summary available',
                 result: evaluation.response.result || 'Fail',
-                city: evaluation.response.city || "Na",
-                phone: evaluation.response.phone || "Na",
-                college: evaluation.response.college || "Na",
-                gender: evaluation.response.gender || "Na",
-                degree: evaluation.response.degree || "Na",
-                year: evaluation.response.year || "Na",
-                interest: evaluation.response.interest || "Na",
+                city: evaluation.response.city || 'Na',
+                phone: evaluation.response.phone || 'Na',
+                college: evaluation.response.college || 'Na',
+                gender: evaluation.response.gender || 'Na',
+                degree: evaluation.response.degree || 'Na',
+                year: evaluation.response.year || 'Na',
+                interest: evaluation.response.interest || 'Na',
                 timestamp: new Date(),
             });
-            yield resumeAnalysed.save();
-            // Update the job's resumes array with the evaluation result
+            yield resumeAnalysis.save();
+            yield models_1.Resume.updateOne({ _id: resume._id }, { processed: 'Y' });
             job.resumes.push({
-                name: resumeFile,
+                name: resumePath,
                 filePath: resumePath,
                 evaluation: evaluation.response,
             });
             yield job.save();
+            //   await resume.save();
+            analysisResults.push(resumeAnalysis);
         }
-        res.status(200).json({ message: 'Resumes processed successfully.', jobId: job._id });
+        const allProcessedResults = yield models_1.ResumeAnalysed.find({ jobId }).populate('resumeId');
+        res.status(200).json({
+            message: 'Resumes processed successfully.',
+            analysisResults: allProcessedResults
+        });
     }
     catch (error) {
-        console.error("Error processing resumes:", error);
+        console.error('Error processing resumes:', error);
         res.status(500).json({ message: 'Failed to process resumes.', error: error.message });
     }
 }));

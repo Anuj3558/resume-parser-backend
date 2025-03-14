@@ -111,6 +111,7 @@ function invokeAnthropicForJob(pdfExtract, jobTitle, jobDescription) {
             temperature: 0.0,
         });
         const response = completion.content[0].type === "text" ? completion.content[0].text : "";
+        console.log("Ai responded with -> ", response);
         return { response: JSON.parse(response), tokens: completion.usage };
     });
 }

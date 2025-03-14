@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
+exports.Resume = exports.ResumeAnalysed = exports.User = exports.JobCategory = exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const path_1 = __importDefault(require("path"));
 const inputDir = path_1.default.join(__dirname, '..', '..', 'input');
@@ -104,6 +104,15 @@ const resumeAnalysedSchema = new mongoose_1.Schema({
     },
     timestamp: { type: Date, default: Date.now }
 });
+const resumeSchema = new mongoose_1.Schema({
+    filePath: { type: String, required: true },
+    processed: { type: String, Enum: ["Y", "N"], required: true },
+    name: { type: String },
+    timestamp: { type: Date, default: Date.now },
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
+    job: { type: mongoose_1.Schema.Types.ObjectId, ref: "Job" },
+    analysis: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "ResumeAnalysed" }],
+});
 const User = mongoose_1.default.model("User", userSchema);
 exports.User = User;
 const JobCategory = mongoose_1.default.model("JobCategory", JobCategorySchema);
@@ -112,3 +121,5 @@ const Job = mongoose_1.default.model("Job", JobSchema); // Corrected model name
 exports.Job = Job;
 const ResumeAnalysed = mongoose_1.default.model('ResumeAnalysed', resumeAnalysedSchema);
 exports.ResumeAnalysed = ResumeAnalysed;
+const Resume = mongoose_1.default.model("Resume", resumeSchema);
+exports.Resume = Resume;
