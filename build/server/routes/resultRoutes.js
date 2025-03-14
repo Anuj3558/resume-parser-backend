@@ -21,105 +21,11 @@ const anthropic_1 = require("../../anthropic");
 const models_1 = require("../models");
 const Analyzerouter = express_1.default.Router();
 const inputDir = path_1.default.join(__dirname, '../../input');
-Analyzerouter.get('/job/:jobId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { jobId } = req.params;
-        // Validate jobId is a valid MongoDB ObjectId
-        if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ success: false, message: 'Invalid job ID format' });
-            return;
-        }
-        // Convert jobId string to MongoDB ObjectId
-        const jobObjectId = new mongoose_1.default.Types.ObjectId(jobId);
-        // First check if the job exists
-        const job = yield models_1.Job.findById(jobObjectId);
-        if (!job) {
-            res.status(404).json({ success: false, message: 'Job not found' });
-            return;
-        }
-        // Fetch all analyzed resumes for this job
-        const analyzedResumes = yield models_1.ResumeAnalysed.find({ jobId: jobObjectId })
-            .sort({ timestamp: -1 }) // Sort by timestamp in descending order (newest first)
-            .select('-__v'); // Exclude the version field
-        // If no analyzed resumes found
-        if (!analyzedResumes || analyzedResumes.length === 0) {
-            res.status(200).json({
-                success: true,
-                message: 'No analyzed resumes found for this job',
-                data: []
-            });
-            return;
-        }
-        // Map results for client consumption and include shortlisted status
-        const formattedResumes = analyzedResumes.map(resume => {
-            const resultLower = resume.result.toLowerCase();
-            const shortlisted = resultLower.includes('pass') || resultLower.includes('qualified');
-            return {
-                id: resume._id,
-                candidateName: resume.candidateName,
-                summary: resume.summary,
-                result: resume.result,
-                matchingScore: resume.matchingscore, // Helper function to calculate a score
-                timestamp: resume.timestamp,
-                reason: resume.summary, // Helper function to generate a reason
-            };
-        });
-        res.status(200).json({
-            success: true,
-            message: 'Analyzed resumes retrieved successfully',
-            data: formattedResumes,
-            count: formattedResumes.length
-        });
-    }
-    catch (error) {
-        console.error("Error fetching analyzed resumes:", error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch analyzed resumes',
-            error: error.message
-        });
-    }
-}));
-// Helper function to calculate a matching score based on the resume analysis
-function calculateMatchingScore(resume) {
-    // This is a simplified scoring mechanism - customize based on your needs
-    let score = 0;
-    // Base score from the result
-    const resultLower = resume.result.toLowerCase();
-    if (resultLower.includes('pass') || resultLower.includes('qualified')) {
-        score += 70; // Base score for qualified candidates
-    }
-    else {
-        score += 30; // Base score for non-qualified candidates
-    }
-    // Additional points for various criteria
-    // For example, more skills could mean higher score
-    const skillsCount = resume.skills.split(',').length;
-    score += Math.min(skillsCount * 2, 20); // Up to 20 additional points for skills
-    // Additional points for education if relevant
-    if (resume.education &&
-        !['unknown', 'not specified', 'n/a'].includes(resume.education.toLowerCase())) {
-        score += 10;
-    }
-    // Ensure the score is between 0 and 100
-    return Math.min(Math.max(score, 0), 100);
-}
-// Helper function to generate a reason for the shortlisting decision
-function generateReason(resume) {
-    const resultLower = resume.result.toLowerCase();
-    if (resultLower.includes('pass') || resultLower.includes('qualified')) {
-        return `Candidate has relevant skills (${resume.skills}) and satisfies the job requirements.`;
-    }
-    else {
-        return `Candidate's profile doesn't fully match the job requirements or might be missing key skills.`;
-    }
-}
 Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const userId = req.params.userId;
         const jobId = req.params.jobId;
-        console.log("job id->", jobId);
         // Check if jobId is a valid MongoDB ObjectId
         // if (!mongoose.Types.ObjectId.isValid(jobId)) {
         //     res.status(400).json({ message: 'Invalid job ID.' });
@@ -136,7 +42,6 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
         const sanitizedJobTitle = jobVal.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         // Construct the directory path
         const jobDir = path_1.default.join(inputDir, userId, sanitizedJobTitle);
-        console.log(jobDir);
         // Check if the directory exists
         if (!fs_1.default.existsSync(jobDir)) {
             res.status(404).json({ message: 'Job directory not found.' });
@@ -149,7 +54,7 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             return;
         }
         // Fetch the job details from the database
-        const job = yield models_1.Job.findOne({ _id: jobObjectId, initiator: userId });
+        const job = yield models_1.Job.findOne({ _id: jobObjectId });
         if (!job) {
             res.status(404).json({ message: 'Job not found.' });
             return;
@@ -159,10 +64,8 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             const resumePath = path_1.default.join(jobDir, resumeFile);
             // Extract text from the resume
             const resumeText = yield (0, pdf_extract_1.extractTextFromPdf)(resumePath);
-            console.log(resumeText);
             // Send the text to Anthropic for evaluation
             const evaluation = yield (0, anthropic_1.invokeAnthropicForJob)(resumeText, job.description, job.requirements);
-            console.log(evaluation);
             // Save the evaluation result in the ResumeAnalysed schema
             const resumeAnalysed = new models_1.ResumeAnalysed({
                 resumeId: new mongoose_1.default.Types.ObjectId(), // Generate a new ID for the resume

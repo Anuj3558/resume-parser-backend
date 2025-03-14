@@ -38,7 +38,7 @@ app.use((0, cors_1.default)({
     methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
-// Routes
+// Route
 app.use("/auth", authRoutes_1.default);
 app.use("/api", AdminAnalyticsRoute_1.default);
 // Protected routes

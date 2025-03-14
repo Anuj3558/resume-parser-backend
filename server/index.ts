@@ -41,7 +41,7 @@ app.use(
 	})
 )
 
-// Routes
+// Route
 app.use("/auth", authRoutes)
 app.use("/api", Adminrouter)
 // Protected routes
