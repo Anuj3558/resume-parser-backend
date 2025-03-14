@@ -56,6 +56,7 @@ Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> 
             res.status(404).json({ message: 'Job not found.' });
             return;
         }
+        //Final Backend commit
 
         // Process each resume
         for (const resumeFile of resumeFiles) {
@@ -75,6 +76,13 @@ Analyzerouter.post('/:jobId/:userId', async (req: any, res: any): Promise<void> 
                 matchingscore: evaluation?.response?.matchingscore || 0,
                 summary: evaluation.response.summary || 'No summary available',
                 result: evaluation.response.result || 'Fail',
+                city:evaluation.response.city ||"Na",
+                phone:evaluation.response.phone || "Na",
+                college:evaluation.response.college || "Na",
+                gender : evaluation.response.gender || "Na",
+                degree:evaluation.response.degree || "Na",
+                year:evaluation.response.year || "Na",
+                interest:evaluation.response.interest || "Na",
                 timestamp: new Date(),
             });
 

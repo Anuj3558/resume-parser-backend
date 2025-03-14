@@ -67,6 +67,6 @@ app.post("/config/update", (req, res) => {
     fs_1.default.writeFileSync(envFilePath, envConfig);
     res.send(`<div class="text-green-400">Directories updated successfully!</div>`);
 });
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
 });

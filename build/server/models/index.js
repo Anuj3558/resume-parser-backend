@@ -82,6 +82,26 @@ const resumeAnalysedSchema = new mongoose_1.Schema({
     summary: { type: String, required: true },
     result: { type: String, required: true },
     matchingscore: { type: Number, required: true },
+    college: {
+        type: String,
+        required: true,
+    },
+    phone: {
+        type: String,
+        required: true,
+    },
+    gender: {
+        type: String,
+        required: true,
+    },
+    year: {
+        type: String,
+        required: true,
+    },
+    interest: {
+        type: [String],
+        required: true,
+    },
     timestamp: { type: Date, default: Date.now }
 });
 const User = mongoose_1.default.model("User", userSchema);
