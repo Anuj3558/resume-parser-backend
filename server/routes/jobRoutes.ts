@@ -269,7 +269,7 @@ jobRouter.delete("/jobs/unassign/:jobId/:recruiterId", async (req: any, res: any
 	try {
 		const updatedJob = await Job.findByIdAndUpdate(
 			jobId,
-			{$pull: {assigned: {_id: recruiterId}}},
+			{$pull: {assigned: recruiterId}},
 			{new: true}
 		)
 

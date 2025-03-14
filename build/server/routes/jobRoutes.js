@@ -272,7 +272,7 @@ jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0,
 jobRouter.delete("/jobs/unassign/:jobId/:recruiterId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { jobId, recruiterId } = req.params;
     try {
-        const updatedJob = yield models_1.Job.findByIdAndUpdate(jobId, { $pull: { assigned: { _id: recruiterId } } }, { new: true });
+        const updatedJob = yield models_1.Job.findByIdAndUpdate(jobId, { $pull: { assigned: recruiterId } }, { new: true });
         if (!updatedJob) {
             return res.status(404).json({ message: "Job not found" });
         }
