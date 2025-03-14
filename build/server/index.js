@@ -47,6 +47,7 @@ app.use("/process-resumes", resultRoutes_2.default);
 app.use("/recruiter", recruiterRoutes_1.default);
 app.get("/", (req, res) => {
     //res.sendFile(path.join(__dirname, "views", "index.html"))
+    res.json({ message: "Hellow world" });
 });
 app.post("/config/update", (req, res) => {
     const { inputDir, outputDir } = req.body;

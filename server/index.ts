@@ -52,6 +52,7 @@ app.use("/recruiter", recruiterRoutes)
 
 app.get("/", (req: Request, res: Response) => {
 	//res.sendFile(path.join(__dirname, "views", "index.html"))
+	res.json({message: "Hellow world"})
 })
 
 app.post("/config/update", (req: any, res: any) => {
