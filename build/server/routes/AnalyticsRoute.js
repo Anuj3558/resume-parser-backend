@@ -71,29 +71,41 @@ AnalyticsRouter.get("/user/analytics/:id", (req, res) => __awaiter(void 0, void 
     try {
         const jobCategories = yield index_1.JobCategory.find({});
         const { id } = req.params;
-        console.log("id " + id);
-        console.log("id " + "67d4200dcd6088d305d74b1a");
         const allEvals = yield index_1.Job.find({
             $or: [{ assigned: { $in: [id] } }, { initiator: id }],
         });
-        let c = 0;
-        allEvals.map((job) => {
-            c += job.resumeMatches;
+        let totalShortlisted = 0;
+        // Fetch all job IDs for this user
+        const jobIds = allEvals.map(job => job._id);
+        // Get all ResumeAnalysed documents where result is 'success'
+        const shortlistedResumes = yield index_1.ResumeAnalysed.find({
+            jobId: { $in: jobIds },
+            result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
         });
-        console.log("gg" + allEvals);
-        const jobs = allEvals.map((job) => ({
-            title: job.title,
-            totalResumes: job.resumes.length,
-            resumeMatches: job.resumeMatches,
+        // Count of shortlisted resumes
+        totalShortlisted = shortlistedResumes.length;
+        const jobs = allEvals.map((job) => __awaiter(void 0, void 0, void 0, function* () {
+            // Get shortlisted resumes for this specific job
+            const jobShortlisted = yield index_1.ResumeAnalysed.find({
+                jobId: job._id,
+                result: 'Success'
+            }).countDocuments();
+            return {
+                title: job.title,
+                totalResumes: job.resumes.length,
+                resumeMatches: jobShortlisted, // Update this with actual count
+            };
         }));
-        console.log(jobs);
+        // Wait for all job data to be processed
+        const resolvedJobs = yield Promise.all(jobs);
+        const totalCandidates = allEvals.reduce((acc, job) => acc + job.resumes.length, 0);
         const analyticsData = {
             categories: jobCategories.length,
             descriptions: allEvals.length,
-            candidates: allEvals.reduce((acc, job) => acc + job.resumes.length, 0),
-            shortListed: c,
-            rejected: allEvals.reduce((acc, job) => acc + job.resumes.length, 0) - c,
-            jobs,
+            candidates: totalCandidates,
+            shortListed: totalShortlisted,
+            rejected: totalCandidates - totalShortlisted,
+            jobs: resolvedJobs,
         };
         res.status(200).json(analyticsData);
     }
