@@ -16,7 +16,6 @@ const express_1 = __importDefault(require("express"));
 const index_1 = require("../models/index"); // Adjust the import path as necessary
 const AnalyticsRouter = express_1.default.Router();
 AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         // Fetch total number of users
         const totalUsers = yield index_1.User.countDocuments();
@@ -24,26 +23,22 @@ AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, 
         const activeUsers = yield index_1.User.countDocuments({ status: "ACTIVE" });
         // Fetch total job descriptions
         const totalJobs = yield index_1.Job.countDocuments();
-        // Fetch total resume matches (assuming this is a sum of resumeMatches in all jobs)
-        const totalResumeMatches = yield index_1.Job.aggregate([
-            { $group: { _id: null, total: { $sum: "$resumeMatches" } } },
-        ]);
+        // Fetch total resumes processed
+        const totalResumes = yield index_1.ResumeAnalysed.countDocuments();
+        // Fetch total resume matches using ResumeAnalysed collection
+        const successfulMatches = yield index_1.ResumeAnalysed.countDocuments({ result: "success" });
         // Fetch job categories distribution
         const jobCategories = yield index_1.Job.aggregate([
             { $group: { _id: "$category", count: { $sum: 1 } } },
         ]);
-        // Fetch resume match distribution (example: grouping by percentage)
-        const resumeMatchDistribution = yield index_1.Job.aggregate([
+        // Fetch result distribution (success vs fail)
+        const resultDistribution = yield index_1.ResumeAnalysed.aggregate([
             {
-                $bucket: {
-                    groupBy: "$resumeMatches",
-                    boundaries: [0, 50, 70, 90, 100],
-                    default: "Other",
-                    output: {
-                        count: { $sum: 1 },
-                    },
-                },
-            },
+                $group: {
+                    _id: "$result", // Group by result (success or fail)
+                    count: { $sum: 1 }
+                }
+            }
         ]);
         // Fetch recent user activity (example: last 5 activities)
         const recentActivity = yield index_1.User.find()
@@ -55,9 +50,11 @@ AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, 
             totalUsers,
             activeUsers,
             totalJobs,
-            totalResumeMatches: ((_a = totalResumeMatches[0]) === null || _a === void 0 ? void 0 : _a.total) || 0,
+            totalResumes,
+            successfulMatches,
+            rejectedMatches: totalResumes - successfulMatches,
             jobCategories,
-            resumeMatchDistribution,
+            resultDistribution,
             recentActivity,
         };
         res.status(200).json(analyticsData);

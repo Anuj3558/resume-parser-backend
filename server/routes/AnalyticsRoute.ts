@@ -6,62 +6,61 @@ const  AnalyticsRouter = express.Router()
 
 AnalyticsRouter.get("/admin/analytics", async (req: Request, res: Response) => {
 	try {
-		// Fetch total number of users
-		const totalUsers = await User.countDocuments()
-
-		// Fetch active users
-		const activeUsers = await User.countDocuments({status: "ACTIVE"})
-
-		// Fetch total job descriptions
-		const totalJobs = await Job.countDocuments()
-
-		// Fetch total resume matches (assuming this is a sum of resumeMatches in all jobs)
-		const totalResumeMatches = await Job.aggregate([
-			{$group: {_id: null, total: {$sum: "$resumeMatches"}}},
-		])
-
-		// Fetch job categories distribution
-		const jobCategories = await Job.aggregate([
-			{$group: {_id: "$category", count: {$sum: 1}}},
-		])
-
-		// Fetch resume match distribution (example: grouping by percentage)
-		const resumeMatchDistribution = await Job.aggregate([
-			{
-				$bucket: {
-					groupBy: "$resumeMatches",
-					boundaries: [0, 50, 70, 90, 100],
-					default: "Other",
-					output: {
-						count: {$sum: 1},
-					},
-				},
-			},
-		])
-
-		// Fetch recent user activity (example: last 5 activities)
-		const recentActivity = await User.find()
-			.sort({timestamp: -1})
-			.limit(5)
-			.select("name email status")
-
-		// Prepare the response
-		const analyticsData = {
-			totalUsers,
-			activeUsers,
-			totalJobs,
-			totalResumeMatches: totalResumeMatches[0]?.total || 0,
-			jobCategories,
-			resumeMatchDistribution,
-			recentActivity,
+	  // Fetch total number of users
+	  const totalUsers = await User.countDocuments();
+  
+	  // Fetch active users
+	  const activeUsers = await User.countDocuments({ status: "ACTIVE" });
+  
+	  // Fetch total job descriptions
+	  const totalJobs = await Job.countDocuments();
+  
+	  // Fetch total resumes processed
+	  const totalResumes = await ResumeAnalysed.countDocuments();
+  
+	  // Fetch total resume matches using ResumeAnalysed collection
+	  const successfulMatches = await ResumeAnalysed.countDocuments({ result: "success" });
+  
+	  // Fetch job categories distribution
+	  const jobCategories = await Job.aggregate([
+		{ $group: { _id: "$category", count: { $sum: 1 } } },
+	  ]);
+  
+	  // Fetch result distribution (success vs fail)
+	  const resultDistribution = await ResumeAnalysed.aggregate([
+		{
+		  $group: {
+			_id: "$result", // Group by result (success or fail)
+			count: { $sum: 1 }
+		  }
 		}
-
-		res.status(200).json(analyticsData)
+	  ]);
+  
+	  // Fetch recent user activity (example: last 5 activities)
+	  const recentActivity = await User.find()
+		.sort({ timestamp: -1 })
+		.limit(5)
+		.select("name email status");
+  
+	  // Prepare the response
+	  const analyticsData = {
+		totalUsers,
+		activeUsers,
+		totalJobs,
+		totalResumes,
+		successfulMatches,
+		rejectedMatches: totalResumes - successfulMatches,
+		jobCategories,
+		resultDistribution,
+		recentActivity,
+	  };
+  
+	  res.status(200).json(analyticsData);
 	} catch (error) {
-		console.error("Error fetching analytics data:", error)
-		res.status(500).json({message: "Internal server error"})
+	  console.error("Error fetching analytics data:", error);
+	  res.status(500).json({ message: "Internal server error" });
 	}
-})
+  });
 
 AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) => {
 	try {
