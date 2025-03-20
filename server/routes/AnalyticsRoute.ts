@@ -2,7 +2,7 @@ import express, {Request, Response} from "express"
 import mongoose from "mongoose"
 import {Job, JobCategory, ResumeAnalysed, User} from "../models/index" // Adjust the import path as necessary
 
-const AnalyticsRouter = express.Router()
+const  AnalyticsRouter = express.Router()
 
 AnalyticsRouter.get("/admin/analytics", async (req: Request, res: Response) => {
 	try {
@@ -65,45 +65,60 @@ AnalyticsRouter.get("/admin/analytics", async (req: Request, res: Response) => {
 
 AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) => {
 	try {
-		const jobCategories = await JobCategory.find({})
-
-		const {id} = req.params
-		console.log("id " + id)
-		console.log("id " + "67d4200dcd6088d305d74b1a")
-		const allEvals = await Job.find({
-			$or: [{assigned: {$in: [id]}}, {initiator: id}],
-		})
-
-		let c = 0
-
-		allEvals.map((job) => {
-			c += job.resumeMatches
-		})
-
-		console.log("gg" + allEvals)
-
-		const jobs = allEvals.map((job) => ({
-			title: job.title,
-			totalResumes: job.resumes.length,
-			resumeMatches: job.resumeMatches,
-		}))
-
-		console.log(jobs)
-
-		const analyticsData = {
-			categories: jobCategories.length,
-			descriptions: allEvals.length,
-			candidates: allEvals.reduce((acc, job) => acc + job.resumes.length, 0),
-			shortListed: c,
-			rejected: allEvals.reduce((acc, job) => acc + job.resumes.length, 0) - c,
-			jobs,
+	  const jobCategories = await JobCategory.find({})
+	  const {id} = req.params
+	  
+	  const allEvals = await Job.find({
+		$or: [{assigned: {$in: [id]}}, {initiator: id}],
+	  })
+	  
+	  let totalShortlisted = 0
+	  
+	  // Fetch all job IDs for this user
+	  const jobIds = allEvals.map(job => job._id)
+	  
+	  // Get all ResumeAnalysed documents where result is 'success'
+	  const shortlistedResumes = await ResumeAnalysed.find({
+		jobId: { $in: jobIds },
+		result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
+	  })
+	  
+	  // Count of shortlisted resumes
+	  totalShortlisted = shortlistedResumes.length
+	  
+	  const jobs = allEvals.map(async (job) => {
+		// Get shortlisted resumes for this specific job
+		const jobShortlisted = await ResumeAnalysed.find({
+		  jobId: job._id,
+		  result: 'Success'
+		}).countDocuments()
+		
+		return {
+		  title: job.title,
+		  totalResumes: job.resumes.length,
+		  resumeMatches: jobShortlisted, // Update this with actual count
 		}
-
-		res.status(200).json(analyticsData)
+	  })
+	  
+	  // Wait for all job data to be processed
+	  const resolvedJobs = await Promise.all(jobs)
+	  
+	  const totalCandidates = allEvals.reduce((acc, job) => acc + job.resumes.length, 0)
+	  
+	  const analyticsData = {
+		categories: jobCategories.length,
+		descriptions: allEvals.length,
+		candidates: totalCandidates,
+		shortListed: totalShortlisted,
+		rejected: totalCandidates - totalShortlisted,
+		jobs: resolvedJobs,
+	  }
+	  
+	  res.status(200).json(analyticsData)
 	} catch (error) {
-		console.error("Error fetching analytics data:", error)
-		res.status(500).json({message: "Internal server error"})
+	  console.error("Error fetching analytics data:", error)
+	  res.status(500).json({message: "Internal server error"})
 	}
-})
+  })
 
 export default AnalyticsRouter
