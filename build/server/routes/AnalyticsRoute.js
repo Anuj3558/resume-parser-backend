@@ -79,10 +79,11 @@ AnalyticsRouter.get("/user/analytics/:id", (req, res) => __awaiter(void 0, void 
         // Fetch all job IDs for this user
         const jobIds = allEvals.map(job => job._id);
         // Get all ResumeAnalysed documents where result is 'success'
-        const shortlistedResumes = yield index_1.ResumeAnalysed.find({
+        const uniqueAppliedCandidates = yield index_1.ResumeAnalysed.find({
             jobId: { $in: jobIds },
             result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
         });
+        const shortlistedResumes = [...new Set(uniqueAppliedCandidates.map(resume => resume.resumeId.toString()))];
         // Count of shortlisted resumes
         totalShortlisted = shortlistedResumes.length;
         const jobs = allEvals.map((job) => __awaiter(void 0, void 0, void 0, function* () {

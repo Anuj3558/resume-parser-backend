@@ -78,10 +78,13 @@ AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) =
 	  const jobIds = allEvals.map(job => job._id)
 	  
 	  // Get all ResumeAnalysed documents where result is 'success'
-	  const shortlistedResumes = await ResumeAnalysed.find({
+	  const uniqueAppliedCandidates = await ResumeAnalysed.find({
 		jobId: { $in: jobIds },
 		result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
 	  })
+	  const shortlistedResumes = [...new Set(uniqueAppliedCandidates.map(resume => resume.resumeId.toString()))];
+
+
 	  
 	  // Count of shortlisted resumes
 	  totalShortlisted = shortlistedResumes.length
