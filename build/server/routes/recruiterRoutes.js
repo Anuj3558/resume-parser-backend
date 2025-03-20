@@ -23,7 +23,6 @@ router.get("/getAssignedJobs/:id", (req, res) => __awaiter(void 0, void 0, void 
         console.log("getJobs");
         const { id } = req.params;
         const jobs = yield models_1.Job.find({ assigned: { $in: [id] } });
-        console.log(jobs);
         res.status(200).json(jobs);
     }
     catch (error) {
@@ -32,14 +31,12 @@ router.get("/getAssignedJobs/:id", (req, res) => __awaiter(void 0, void 0, void 
 }));
 router.get("/getAllJobs/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("getJobs");
         const { id } = req.params;
         const objectId = new mongoose_1.default.Types.ObjectId(id);
         console.log(id, objectId);
         const jobs = yield models_1.Job.find({
             $or: [{ assigned: { $in: [objectId] } }, { initiator: objectId }]
         });
-        console.log(jobs);
         res.status(200).json(jobs);
     }
     catch (error) {

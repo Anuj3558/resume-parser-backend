@@ -14,7 +14,6 @@ router.get("/getAssignedJobs/:id", async (req: Request, res: Response) => {
 		console.log("getJobs")
 		const {id} = req.params
 		const jobs = await Job.find({assigned: {$in: [id]}})
-		console.log(jobs)
 		res.status(200).json(jobs)
 	} catch (error) {
 		res.status(500).json({message: "Server error", error})
@@ -22,7 +21,6 @@ router.get("/getAssignedJobs/:id", async (req: Request, res: Response) => {
 })
 router.get("/getAllJobs/:id", async (req: Request, res: Response) => {
 	try {
-		console.log("getJobs")
 		const {id} = req.params
 		const objectId = new mongoose.Types.ObjectId(id); 
 		console.log(id, objectId)
@@ -30,7 +28,6 @@ router.get("/getAllJobs/:id", async (req: Request, res: Response) => {
 			$or: [{ assigned: { $in: [objectId] } }, { initiator: objectId }]
 		  });
 	
-		console.log(jobs)
 		res.status(200).json(jobs)
 	} catch (error) {
 

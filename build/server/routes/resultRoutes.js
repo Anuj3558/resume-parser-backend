@@ -18,6 +18,7 @@ const express_1 = __importDefault(require("express"));
 const pdf_extract_1 = require("../../pdf-extract");
 const anthropic_1 = require("../../anthropic");
 const models_1 = require("../models");
+const db_1 = require("../utils/db");
 const Analyzerouter = express_1.default.Router();
 const inputDir = path_1.default.join(__dirname, "../../input");
 Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,6 +33,7 @@ Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, vo
             return res.status(404).json({ error: 'Job not found.' });
         }
         const resumes = yield models_1.Resume.find({ job: jobId, user: userId, processed: 'N' });
+        (0, db_1.connectToDatabase)();
         if (resumes.length === 0) {
             return res.status(400).json({ error: 'No unprocessed resumes found.' });
         }

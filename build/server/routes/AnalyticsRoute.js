@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const index_1 = require("../models/index"); // Adjust the import path as necessary
+const db_1 = require("../utils/db");
 const AnalyticsRouter = express_1.default.Router();
 AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -70,6 +71,7 @@ AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, 
 }));
 AnalyticsRouter.get("/user/analytics/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        (0, db_1.connectToDatabase)();
         const jobCategories = yield index_1.JobCategory.find({});
         const { id } = req.params;
         const allEvals = yield index_1.Job.find({
@@ -84,6 +86,7 @@ AnalyticsRouter.get("/user/analytics/:id", (req, res) => __awaiter(void 0, void 
             result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
         });
         const shortlistedResumes = [...new Set(uniqueAppliedCandidates.map(resume => resume.resumeId.toString()))];
+        console.log("Shortlisted once" + shortlistedResumes);
         // Count of shortlisted resumes
         totalShortlisted = shortlistedResumes.length;
         const jobs = allEvals.map((job) => __awaiter(void 0, void 0, void 0, function* () {
@@ -100,13 +103,20 @@ AnalyticsRouter.get("/user/analytics/:id", (req, res) => __awaiter(void 0, void 
         }));
         // Wait for all job data to be processed
         const resolvedJobs = yield Promise.all(jobs);
+        const uniqueAppliedCandidatesFail = yield index_1.ResumeAnalysed.find({
+            jobId: { $in: jobIds },
+            result: 'Fail' // Changed from 'sucess' to 'success' assuming it's a typo
+        });
+        const shortlistedResumesFail = [...new Set(uniqueAppliedCandidatesFail.map(resume => resume.resumeId.toString()))];
         const totalCandidates = allEvals.reduce((acc, job) => acc + job.resumes.length, 0);
+        const totalFail = shortlistedResumesFail.length;
+        console.log("fail" + totalFail);
         const analyticsData = {
             categories: jobCategories.length,
             descriptions: allEvals.length,
             candidates: totalCandidates,
             shortListed: totalShortlisted,
-            rejected: totalCandidates - totalShortlisted,
+            rejected: totalFail,
             jobs: resolvedJobs,
         };
         res.status(200).json(analyticsData);

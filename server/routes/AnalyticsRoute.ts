@@ -1,6 +1,7 @@
 import express, {Request, Response} from "express"
 import mongoose from "mongoose"
 import {Job, JobCategory, ResumeAnalysed, User} from "../models/index" // Adjust the import path as necessary
+import { connectToDatabase } from "../utils/db"
 
 const  AnalyticsRouter = express.Router()
 
@@ -65,6 +66,7 @@ AnalyticsRouter.get("/admin/analytics", async (req: Request, res: Response) => {
 
 AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) => {
 	try {
+		connectToDatabase();
 	  const jobCategories = await JobCategory.find({})
 	  const {id} = req.params
 	  
@@ -83,7 +85,7 @@ AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) =
 		result: 'success' // Changed from 'sucess' to 'success' assuming it's a typo
 	  })
 	  const shortlistedResumes = [...new Set(uniqueAppliedCandidates.map(resume => resume.resumeId.toString()))];
-
+      console.log("Shortlisted once"+shortlistedResumes);
 
 	  
 	  // Count of shortlisted resumes
@@ -105,15 +107,21 @@ AnalyticsRouter.get("/user/analytics/:id", async (req: Request, res: Response) =
 	  
 	  // Wait for all job data to be processed
 	  const resolvedJobs = await Promise.all(jobs)
-	  
+	  const uniqueAppliedCandidatesFail = await ResumeAnalysed.find({
+		jobId: { $in: jobIds },
+		result: 'Fail' // Changed from 'sucess' to 'success' assuming it's a typo
+	  })
+	  const shortlistedResumesFail = [...new Set(uniqueAppliedCandidatesFail.map(resume => resume.resumeId.toString()))];
+
 	  const totalCandidates = allEvals.reduce((acc, job) => acc + job.resumes.length, 0)
-	  
+	  const totalFail = shortlistedResumesFail.length
+	  console.log( "fail"+totalFail)
 	  const analyticsData = {
 		categories: jobCategories.length,
 		descriptions: allEvals.length,
 		candidates: totalCandidates,
 		shortListed: totalShortlisted,
-		rejected: totalCandidates - totalShortlisted,
+		rejected: totalFail,
 		jobs: resolvedJobs,
 	  }
 	  

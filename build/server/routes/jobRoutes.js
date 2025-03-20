@@ -61,7 +61,6 @@ jobRouter.post("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0
             return res.status(400).json({ error: "Name is required" });
         const jobCategory = new models_1.JobCategory({ name });
         yield jobCategory.save();
-        console.log(jobCategory);
         res.status(201).json({
             id: jobCategory._id,
             name: jobCategory.name,
@@ -161,7 +160,6 @@ jobRouter.get("/resumeEvals/:jobId", (req, res) => __awaiter(void 0, void 0, voi
 }));
 //
 jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Hiii");
     try {
         const { initiator, title, category, description, requirements, location, } = req.body;
         // console.log(
@@ -173,7 +171,6 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
         // 	requirements,
         // 	location
         // )
-        console.log(initiator[1]);
         if (!title ||
             !category ||
             !description ||
@@ -183,7 +180,6 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
             return res.status(400).json({ error: "Please fill all fields" });
         }
         else {
-            console.log("Received", title, initiator);
             const job = new models_1.Job({
                 title,
                 category,
@@ -193,7 +189,6 @@ jobRouter.post("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function
                 initiator: initiator,
             });
             yield job.save();
-            console.log("Received", job);
             res.status(201).json(job);
         }
     }
@@ -249,7 +244,6 @@ jobRouter.put("/assign/:jobId", (req, res) => __awaiter(void 0, void 0, void 0, 
         const job = yield models_1.Job.findById(req.params.jobId);
         if (!job)
             return res.status(404).json({ message: "Job not found" });
-        console.log(userId);
         if (!job.assigned.includes(userId)) {
             job.assigned.push(userId);
         }
@@ -273,7 +267,6 @@ jobRouter.get("/assigned/:jobId", (req, res) => __awaiter(void 0, void 0, void 0
 }));
 jobRouter.get("/job-categories", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("Hello");
         const categories = yield models_1.JobCategory.find();
         res.json(categories);
     }

@@ -28,6 +28,7 @@ exports.outputDir = path_1.default.join(__dirname, "output");
 app.use((0, cors_1.default)({
     origin: "*",
 }));
+//sfdhhh
 // Middleware
 app.use(express_1.default.static("views"));
 app.use("/input", express_1.default.static(exports.inputDir));

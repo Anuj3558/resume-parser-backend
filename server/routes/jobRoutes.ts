@@ -17,7 +17,6 @@ jobRouter.post("/job-categories", async (req: any, res: any) => {
 
 		const jobCategory = new JobCategory({name})
 		await jobCategory.save()
-		console.log(jobCategory)
 		res.status(201).json({
 			id: jobCategory._id,
 			name: jobCategory.name,
@@ -129,7 +128,6 @@ jobRouter.get("/resumeEvals/:jobId", async (req: any, res: any) => {
 
 //
 jobRouter.post("/jobs", async (req: any, res: any) => {
-	console.log("Hiii")
 	try {
 		const {
 			initiator,
@@ -149,7 +147,8 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 		// 	requirements,
 		// 	location
 		// )
-		console.log(initiator[1])
+	
+
 		if (
 			!title ||
 			!category ||
@@ -160,7 +159,7 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 		) {
 			return res.status(400).json({error: "Please fill all fields"})
 		} else {
-			console.log("Received", title, initiator)
+		
 			const job = new Job({
 				title,
 				category,
@@ -170,7 +169,7 @@ jobRouter.post("/jobs", async (req: any, res: any) => {
 				initiator: initiator,
 			})
 			await job.save()
-			console.log("Received", job)
+
 			res.status(201).json(job)
 		}
 	} catch (error) {
@@ -243,7 +242,6 @@ jobRouter.put("/assign/:jobId", async (req: any, res: any) => {
 		const {userId} = req.body
 		const job = await Job.findById(req.params.jobId)
 		if (!job) return res.status(404).json({message: "Job not found"})
-		console.log(userId)
 		if (!job.assigned.includes(userId)) {
 			job.assigned.push(userId)
 		}
@@ -269,7 +267,6 @@ jobRouter.get("/assigned/:jobId", async (req: any, res: any) => {
 })
 jobRouter.get("/job-categories", async (req: any, res: any) => {
 	try {
-		console.log("Hello")
 		const categories = await JobCategory.find()
 		res.json(categories)
 	} catch (error) {

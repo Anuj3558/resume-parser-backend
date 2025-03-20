@@ -23,6 +23,7 @@ const connectToDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         yield mongoose_1.default.connect(process.env.MONGO_URL, {
             dbName: "resume",
         });
+        const result = yield mongoose_1.default.model('Resume').deleteMany({ processed: "N" });
         console.log("Connected to MongoDB");
     }
     catch (error) {

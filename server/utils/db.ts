@@ -8,7 +8,7 @@ export const connectToDatabase = async () => {
 		await mongoose.connect(process.env.MONGO_URL as string, {
 			dbName: "resume",
 		})
-
+		const result = await mongoose.model('Resume').deleteMany({ processed: "N" });
 		console.log("Connected to MongoDB")
 	} catch (error) {
 		throw new Error(`Error connecting to database: ${error}`)
