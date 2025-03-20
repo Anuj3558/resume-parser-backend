@@ -32,6 +32,7 @@ AnalyticsRouter.get("/admin/analytics", (req, res) => __awaiter(void 0, void 0, 
         const jobCategories = yield index_1.Job.aggregate([
             { $group: { _id: "$category", count: { $sum: 1 } } },
         ]);
+        ///For pusshin and reflceting
         // Fetch resume match distribution (example: grouping by percentage)
         const resumeMatchDistribution = yield index_1.Job.aggregate([
             {

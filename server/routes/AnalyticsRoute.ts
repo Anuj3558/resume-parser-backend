@@ -24,7 +24,7 @@ AnalyticsRouter.get("/admin/analytics", async (req: Request, res: Response) => {
 		const jobCategories = await Job.aggregate([
 			{$group: {_id: "$category", count: {$sum: 1}}},
 		])
-
+ ///For pusshin and reflceting
 		// Fetch resume match distribution (example: grouping by percentage)
 		const resumeMatchDistribution = await Job.aggregate([
 			{

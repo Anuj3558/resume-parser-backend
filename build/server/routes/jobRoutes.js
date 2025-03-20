@@ -133,17 +133,29 @@ jobRouter.get("/jobs", (req, res) => __awaiter(void 0, void 0, void 0, function*
 }));
 jobRouter.get("/resumeEvals/:jobId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // const jobs = await Job.find().populate("userId", "name email");
-        // Check if jobid is valid mongo id
         const jobId = req.params.jobId;
         if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
-            return res.status(404).json({ response: [], error: "Invalid job id" });
+            return res.status(404).json({ response: [], error: "Invalid job ID" });
         }
-        const jobs = yield models_1.Job.find({ _id: jobId }).select("resumes");
-        res.json(jobs);
+        const job = yield models_1.Job.findById(jobId).select("resumes");
+        if (!job) {
+            return res.status(404).json({ response: [], error: "Job not found" });
+        }
+        // Use a Set to filter out duplicates (based on name + result)
+        const seen = new Set();
+        const uniqueResumes = job.resumes.filter((resume) => {
+            var _a;
+            const result = ((_a = resume.evaluation) === null || _a === void 0 ? void 0 : _a.result) || "UNKNOWN"; // Handle missing result
+            const key = `${resume.name}-${result}`;
+            if (seen.has(key))
+                return false;
+            seen.add(key);
+            return true;
+        });
+        res.json({ response: uniqueResumes });
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ error: "Error fetching jobs" });
     }
 }));
