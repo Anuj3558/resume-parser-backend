@@ -56,7 +56,9 @@ function invokeAnthropic(pdfExtract) {
             messages: [{ role: "user", content: prompt }],
             temperature: 0.0,
         });
-        const response = completion.content[0].type === "text" ? completion.content[0].text : "";
+        const response = completion.content[0].type === 'text'
+            ? completion.content[0].text
+            : '';
         return { response: JSON.parse(response), tokens: completion.usage };
     });
 }
@@ -102,6 +104,7 @@ function invokeAnthropicForJob(pdfExtract, jobTitle, jobDescription) {
       intrest:["technology1","technology2"],
     }
   `;
+        //comment for commit
         const completion = yield anthropic.messages.create({
             model: "claude-3-5-sonnet-20240620",
             max_tokens: 4096,
@@ -109,7 +112,6 @@ function invokeAnthropicForJob(pdfExtract, jobTitle, jobDescription) {
             temperature: 0.0,
         });
         const response = completion.content[0].type === "text" ? completion.content[0].text : "";
-        console.log("Ai responded with -> ", response);
         return { response: JSON.parse(response), tokens: completion.usage };
     });
 }

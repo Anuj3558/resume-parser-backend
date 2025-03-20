@@ -1,9 +1,5 @@
 import mongoose, {Schema} from "mongoose"
 import path from "path"
-import fs from "fs"
-import {invokeAnthropicForJob} from "../../anthropic"
-import {extractTextFromPdf} from "../../pdf-extract"
-const inputDir = path.join(__dirname, "..", "..", "input")
 
 const JobCategorySchema = new mongoose.Schema({
 	id: {type: mongoose.Schema.Types.ObjectId, auto: true}, // Auto-generated unique ID

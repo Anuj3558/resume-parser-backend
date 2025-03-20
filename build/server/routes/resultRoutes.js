@@ -19,7 +19,7 @@ const pdf_extract_1 = require("../../pdf-extract");
 const anthropic_1 = require("../../anthropic");
 const models_1 = require("../models");
 const Analyzerouter = express_1.default.Router();
-const inputDir = path_1.default.join(__dirname, '../../input');
+const inputDir = path_1.default.join(__dirname, "../../input");
 Analyzerouter.post('/:jobId/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
